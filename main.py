@@ -178,5 +178,5 @@ if __name__ == "__main__":
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 main_gui()
             else:
-                showinfo("Error", "Error!")
+                showerror("Error", "Error!")
         

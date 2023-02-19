@@ -3,10 +3,14 @@ import subprocess
 import sqlite3
 from tkinter import *
 from tkinter.messagebox import *
+from random import choice
 
 background = "#f0e68c"
 db_name = "reddit_info.db"
 table = "users"
+
+def create_video():
+    """ Generates Video """
 
 def fetch_post(community, post_id):
     """ Fetches Post """
@@ -20,15 +24,22 @@ def fetch_post(community, post_id):
     reddit = praw.Reddit(client_id=client_id,
                      client_secret=client_secret,
                     user_agent='ytshorts')
-    subreddit = reddit.subreddit(community)
-
-    if post_id in ('', ' '):
-        post = next(iter(subreddit.new()))
-    else:
+    try:
+        subreddit = reddit.subreddit(community)
+        if post_id in ('', ' '):
+            post_id = choice(list(subreddit.new()))
+    
         post = reddit.submission(id=post_id)
 
-    print("\nTitle: ", post.title)
-    print("\nContent: ", post.selftext)    
+        print("------------------------------------------------")
+        print("\n(!) Title: ", post.title)
+        print("\n(!) Content: ", post.selftext)
+        print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
+        print("\n------------------------------------------------")
+        create_video()
+
+    except ValueError:
+        showerror("(!) Invalid Community (!)", "Enter Appropriate Community Name!")
 
 def reddit_gui():
     """ GUI for Reddit Post Scrapping """
@@ -171,9 +182,12 @@ if __name__ == "__main__":
         import praw
         main_gui()
     except ImportError:
-        opt = askokcancel("Install Library", "This Application requires python 'praw' library\nDo you want to install it?")
+        opt = askokcancel("Install Library", "This Application requires python 'praw' library\nDo you wish to install it?")
         if opt:
-            result = subprocess.run(["python", "-m", "pip", "install", "praw"], capture_output=True)
+            if os.name == "nt":
+                result = subprocess.run(["python", "-m", "pip", "install", "praw"], capture_output=True)
+            else:
+                result = subprocess.run(["pip", "install", "praw"], capture_output=False)
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 main_gui()

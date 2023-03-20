@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import subprocess
 import sqlite3
@@ -11,6 +12,7 @@ table = "users"
 
 def create_video():
     """ Generates Video """
+    
 
 def fetch_post(community, post_id):
     """ Fetches Post """
@@ -37,9 +39,9 @@ def fetch_post(community, post_id):
         print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
         create_video()
-
-    except ValueError:
-        showerror("(!) Invalid Community (!)", "Enter Appropriate Community Name!")
+        
+    except prawcore.exceptions.Redirect or ValueError:
+        showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
 
 def reddit_gui():
     """ GUI for Reddit Post Scrapping """
@@ -47,7 +49,7 @@ def reddit_gui():
     reddit_root.title(" ൠ    Reddit Scrapper")
     reddit_root.resizable(False, False)
     
-    canvas = Canvas(reddit_root, height= 550, width=700, bg=background)
+    canvas = Canvas(reddit_root, height=550, width=700, bg=background)
     canvas.pack()
     
     title = Label(canvas, text="Post Scrapper", bg=background, font=("Adobe Garamond Pro", 18, "bold"))
@@ -179,15 +181,12 @@ def main_gui():
     
 if __name__ == "__main__":
     try:
-        import praw
+        import praw, prawcore
         main_gui()
     except ImportError:
         opt = askokcancel("Install Library", "This Application requires python 'praw' library\nDo you wish to install it?")
         if opt:
-            if os.name == "nt":
-                result = subprocess.run(["python", "-m", "pip", "install", "praw"], capture_output=True)
-            else:
-                result = subprocess.run(["pip", "install", "praw"], capture_output=False)
+            result = subprocess.run(["pip", "install", "praw"], capture_output=True)
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 main_gui()

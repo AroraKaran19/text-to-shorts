@@ -20,12 +20,19 @@ def browsing():
                 messagebox.showerror("Error!", "Error reading first frame of video file!")
             else:
                 # If the video file is not corrupt
+                from moviepy.video.io.VideoFileClip import VideoFileClip
+                clip = VideoFileClip(file_path)
+                duration = [0, 0, 0]
+                clip_duration = clip.duration
+                while clip_duration != 0:
+                    if clip_duration > 59:
+                        
+                duration_label.config(text=f"Duration: {duration}")
+                print(clip.duration)
                 cap.release()
-    else:
-        messagebox.showinfo("No File!", "No file was selected!")
 
 def new_background_add():
-    global address
+    global address, duration_label
     """ This function ensures that if user add new video
         it should have shorts required resolution and
         duration. """
@@ -33,20 +40,20 @@ def new_background_add():
     root.title("New Clip")
     root.resizable(False, False)
     
-    bg_canvas = Canvas(root, height=600, width=600, bg="#FFDB58")
+    bg_canvas = Canvas(root, height=600, width=600, bg="white")
     bg_canvas.pack()
     
-    title = Label(bg_canvas, text="Clip Manager", bg="#FFDB58", font=('Minion Pro', 20, "bold"))
+    title = Label(bg_canvas, text="Clip Manager", font=('Minion Pro', 20, "bold"), bg="white")
     bg_canvas.create_window(300, 30, window=title)
 
     address = StringVar()
-    address_bar = Entry(bg_canvas, font=('', 14), textvariable=address)
+    address_bar = Entry(bg_canvas, font=('', 14), textvariable=address, state=DISABLED, bg="black")
     bg_canvas.create_window(240, 100, window=address_bar)
     
-    browse = Button(bg_canvas, text="browse", font=('', 10), command=browsing)
+    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=browsing, bg="black", fg="white")
     bg_canvas.create_window(430, 100, window=browse)
 
-    duration_label = Label(bg_canvas, text="Duration", bg="#FFDB58", font=('Minion Pro', 12))
+    duration_label = Label(bg_canvas, text="Duration: ", font=('Minion Pro', 12), bg="white")
     bg_canvas.create_window(200, 140, window=duration_label)
 
     root.eval('tk::PlaceWindow . center')

@@ -189,6 +189,7 @@ if __name__ == "__main__":
             result = subprocess.run(["pip", "install", "praw"], capture_output=True)
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
+                import praw, prawcore
                 main_gui()
             else:
                 showerror("Error", "Error!")

@@ -3,9 +3,10 @@ import subprocess
 from random import randint
 from tkinter import *
 from tkinter import messagebox, filedialog
+
 try:
-        import cv2 as cv
-        import moviepy.editor as mpe
+    import cv2 as cv
+    import moviepy.editor as mpe
 except ModuleNotFoundError: # Makes sure we have required modules installed!
     ask = messagebox.askokcancel("Require Multiple Modules!", "This script requires OpenCV and MoviePY modules\nDo you wish to install them?\n(May take some time)")
     if ask:
@@ -51,14 +52,10 @@ def browsing(duration_label, address, buttons):
                 address.set(file_path)
                 duration = [0, 0, 0] # Arranges the duration of the clip from seconds to formatted time.
                 duration[2] = clip_duration(file_path)
-                while duration[2] > 59:
-                    if duration[2] > 59:
-                        duration[1]+=1
-                        duration[2]-=60
-                while duration[1] > 59:
-                    if duration[1] > 59:
-                        duration[0]+=1
-                        duration[1]-=60
+                if duration[2] > 59:
+                    duration[0]+=(duration[2]//3600)
+                    duration[1]=(duration[2]-duration[0]*3600)//60
+                    duration[2]=(duration[2]-duration[1]*60)%60
                 duration = f"{duration[0]} hours {duration[1]} mins {duration[2]} secs"
                 duration_label.config(text=f"Duration: {duration}")
                 for button in buttons:

@@ -1,18 +1,18 @@
 import os
-import subprocess
-from random import randint
 from tkinter import *
 from tkinter import messagebox, filedialog
+
 try:
-        import cv2 as cv
-        import moviepy.editor as mpe
+    import cv2 as cv
+    import moviepy.editor as mpe
 except ModuleNotFoundError: # Makes sure we have required modules installed!
     ask = messagebox.askokcancel("Require Multiple Modules!", "This script requires OpenCV and MoviePY modules\nDo you wish to install them?\n(May take some time)")
     if ask:
+        import subprocess
         print("Downloading Required Modules....")
         chk = subprocess.run(["pip", "install", "opencv-python"], capture_output=True)
         chk2 = subprocess.run(["pip", "install", "moviepy"], capture_output=True)
-        if chk and chk2:
+        if not chk.returncode and not chk2.returncode:
             messagebox.showinfo("Download Successfull", "Modules downloaded successfully!")
             import cv2 as cv
             import moviepy.editor as mpe
@@ -27,7 +27,9 @@ def create_video():
 def clip_duration(path):
     from moviepy.video.io.VideoFileClip import VideoFileClip
     clip = VideoFileClip(path)
-    return int(clip.duration)
+    duration = int(clip.duration)
+    clip.close()
+    return duration
 
 def browsing(duration_label, address, buttons):
     """ Dialog to choose a video File """
@@ -78,6 +80,7 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
                 video_codec = "libx264"
             
             trimmed_clip = video_clip.subclip(int(start_time), int(end_time))
+            from random import randint
             trimmed_vid = out_path+"/trimmed-"+str(randint(1000000,99999999))+video_extn
             while True:
                 if os.path.exists(trimmed_vid):
@@ -86,28 +89,42 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
                     break
             
             print("Wait.... the video is being trimmed! (may take time dependant on the clip)")
-            if video_extn == ".mkv":
-                trimmed_clip.write_videofile(trimmed_vid, logger=None, codec=video_codec)
-            else:
-                trimmed_clip.write_videofile(trimmed_vid, logger=None)
-            messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
+            try:
+                if video_extn == ".mkv":
+                    trimmed_clip.write_videofile(trimmed_vid, logger=None, codec=video_codec)
+                else:
+                    trimmed_clip.write_videofile(trimmed_vid, logger=None)
+                messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
+                print("Video Trimmed Successfully!")
+            except:
+                messagebox.showerror("Error Occured!", "Please report this error!\nhttps://github.com/AroraKaran19/text-to-shorts/issues")
+                print("Error Occured! Please report this on https://github.com/AroraKaran19/text-to-shorts/issues")
             trim_m.destroy()
             
         else:
             messagebox.showerror("Error!", "The Video doesn't Exist!")
     else:
         messagebox.showerror("Error!", "The Video doesn't Exist!")
+        
+def time_(time):
+    duration = [0, 0, time]
+    duration[0]+=(duration[2]//3600)
+    duration[1]=(duration[2]-duration[0]*3600)//60
+    duration[2]=(duration[2]-duration[1]*60)%60
+    return f"{duration[0]}:{duration[1]}:{duration[2]}"
                 
 def trim_menu(path):
     global trim_m
     trim_m = Toplevel()
+    trim_m.grab_set()
     trim_m.title("Trim Video")
     trim_m.resizable(False, False)
     
     canvas = Canvas(trim_m, bg="white", height=300, width=300)
     canvas.pack()
     
-    start_label = Label(canvas, text="Start (in secs)", bg="white", fg="black", font=("", 12))
+    start_time = "None"
+    start_label = Label(canvas, text=f"Start: {start_time}", bg="white", fg="black", font=("", 12))
     canvas.create_window(80, 20, window=start_label)
     start_point = StringVar()
     start_scale = Scale(canvas, from_=0, to=clip_duration(path)-1, orient=HORIZONTAL, bg="white", fg="black", length=120, variable=start_point)
@@ -115,7 +132,8 @@ def trim_menu(path):
     start_box = Spinbox(canvas, textvariable=start_point, bg="white", fg="black", from_=0, to=clip_duration(path)-1)
     canvas.create_window(80, 100, window=start_box)
     
-    end_label = Label(canvas, text="End (in secs)", bg="white", fg="black", font=("", 12))
+    end_time = "None"
+    end_label = Label(canvas, text=f"End: {end_time}", bg="white", fg="black", font=("", 12))
     canvas.create_window(220, 20, window=end_label)
     end_point = StringVar()
     end_scale = Scale(canvas, from_=0, to=clip_duration(path), orient=HORIZONTAL, bg="white", fg="black", length=120, variable=end_point)
@@ -135,11 +153,15 @@ def trim_menu(path):
     time = StringVar()
     video_duration = Label(canvas, text=f"Duration: {time}", bg="white", fg="black", font=("", 8))
     canvas.create_window(150, 140, window=video_duration)
+
+    trim_m.protocol("WM_DELETE_WINDOW", trim_m.destroy)
     
     try:
         while True:
-            time.set(str(end_scale.get()-start_scale.get())+" Secs")
-            video_duration.config(text=f"Duration: {time}")
+            start_label.config(text=f"Start: {time_(start_scale.get())}")
+            end_label.config(text=f"End: {time_(end_scale.get())}")
+            time.set(time_(end_scale.get()-start_scale.get()))
+            video_duration.config(text=f"Duration: {time.get()}")
             end_scale.configure(from_=start_scale.get()+1)
             end_box.configure(from_=int(start_box.get())+1)
             trim_m.update()

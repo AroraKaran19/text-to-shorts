@@ -31,7 +31,7 @@ def clip_duration(path):
 
 def browsing(duration_label, address, buttons):
     """ Dialog to choose a video File """
-    file_path = filedialog.askopenfilename(initialdir="/", filetypes =[('MP4', '*.mp4'), ('MOV', '*.mov'), ('AVI', '*.avi'), ('MKV', "*.mkv"), ("All Files", "*.*")], title="Choose Video")
+    file_path = filedialog.askopenfilename(initialdir="/", filetypes =[('MP4', '*.mp4'), ('MOV', '*.mov'), ('AVI', '*.avi'), ('MKV', "*.mkv")], title="Choose Video")
     if os.path.exists(file_path):
         cap = cv.VideoCapture(file_path)
         if not cap.isOpened():
@@ -78,6 +78,8 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
             self_button.config(state=DISABLED)
             video_clip = VideoFileClip(vid_path)
             video_extn = str(vid_path[-4:])
+            if video_extn == ".mkv":
+                video_codec = "libx264"
             
             trimmed_clip = video_clip.subclip(int(start_time), int(end_time))
             trimmed_vid = out_path+"/trimmed-"+str(randint(1000000,99999999))+video_extn
@@ -88,12 +90,17 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
                     break
             
             print("Wait.... the video is being trimmed! (may take time dependant on the clip)")
-            trimmed_clip.write_videofile(trimmed_vid, logger=None)
+            if video_extn == ".mkv":
+                trimmed_clip.write_videofile(trimmed_vid, logger=None, codec=video_codec)
+            else:
+                trimmed_clip.write_videofile(trimmed_vid, logger=None)
             messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
             trim_m.destroy()
             
         else:
             messagebox.showerror("Error!", "The Video doesn't Exist!")
+    else:
+        messagebox.showerror("Error!", "The Video doesn't Exist!")
                 
 def trim_menu(path):
     global trim_m

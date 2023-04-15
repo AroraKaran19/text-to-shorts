@@ -24,19 +24,34 @@ def create_video(name, content, audio):
     txt_clip = mpe.TextClip(text, fontsize=70, color='white')
 
     # Set the duration of the clip the same as the length of the text
-    duration = txt_clip.duration
+    # duration = txt_clip.duration
+    # txt_clip = txt_clip.set_duration(duration)
 
-    # audio to accompany the video
-    audio_clip = mpe.AudioFileClip(audio)
 
-    # Set the duration of the audio the same as the length of the video
-    audio_clip = audio_clip.set_duration(duration)
+    # # audio to accompany the video
+    # audio_clip = mpe.AudioFileClip(audio)
+
+    # # Set the duration of the audio the same as the length of the video
+
+    # audio_clip = audio_clip.set_duration(duration)
+    # Calculate the duration of the clip
+    duration = len(content) * 0.1
+
+    # Create text clip with the specified duration
+    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
+    txt_clip = txt_clip.set_duration(duration)
+
+
+    # Load audio clip and set the duration
+    audio_clip = mpe.AudioFileClip(audio).set_duration(duration)
+    
+
 
     # merge the audio and video
-    final_clip = CompositeVideoClip([txt_clip], size=(1920,1080)).set_audio(audio_clip)
+    final_clip = mpe.CompositeVideoClip([txt_clip], size=(1920,1080)).set_audio(audio_clip)
 
     # write the video to a file
-    final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac')
+    final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac', temp_audiofile='temp-audio.m4a', remove_temp=True, write_logfile=False, verbose=False)
 
     return os.path.join("clips", f"{name}.mp4")
 

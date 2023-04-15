@@ -5,14 +5,15 @@ import sqlite3
 from tkinter import *
 from tkinter.messagebox import *
 from random import choice
-from video import video_section
+import video
 
 background = "#f0e68c"
 db_name = "reddit_info.db"
 table = "users"
 
-def create_video():
+def shorts_generator(post_title, post_content):
     """ Generates Video """
+    video.create_video(video.generate_audio(), post_title, post_content)
     
 
 def fetch_post(community, post_id):
@@ -34,12 +35,14 @@ def fetch_post(community, post_id):
     
         post = reddit.submission(id=post_id)
 
+        post_title=post.title
+        post_content=post.selftext
         print("------------------------------------------------")
-        print("\n(!) Title: ", post.title)
-        print("\n(!) Content: ", post.selftext)
+        print("\n(!) Title: ", post_title)
+        print("\n(!) Content: ", post_content)
         print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
-        create_video()
+        create_video(post_title, post_content)
         
     except prawcore.exceptions.Redirect or ValueError:
         showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
@@ -201,4 +204,7 @@ if __name__ == "__main__":
                 main_gui()
             else:
                 showerror("Error", "Error!")
+    # make video directory if not present
+    if not os.path.exists("clips"):
+        os.mkdir("clips")
         

@@ -22,8 +22,15 @@ except ModuleNotFoundError: # Makes sure we have required modules installed!
     else:
         exit()
 
-def create_video():
-    print()
+
+def generate_audio():
+    """ Generates Audio from text using TTS engine"""
+    return f"{audio_name}.mp3"
+    
+
+def create_video(audio_path, text, name):
+    """ Creates a video from audio and text"""
+
     
 def clip_duration(path):
     from moviepy.video.io.VideoFileClip import VideoFileClip

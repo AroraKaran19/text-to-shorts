@@ -5,6 +5,7 @@ import sqlite3
 from tkinter import *
 from tkinter.messagebox import *
 from random import choice
+from video import video_section
 
 background = "#f0e68c"
 db_name = "reddit_info.db"
@@ -159,7 +160,7 @@ def main_gui():
     root.title("Short Video Generator")
     root.resizable(False, False)
     
-    canvas = Canvas(root, height=400, width=400, bg=background)
+    canvas = Canvas(root, height=600, width=400, bg=background)
     canvas.pack()
     
     title = Label(canvas, text="Short Video\nGenerator", bg=background, font=('Terminal', 30, "bold"), fg="black")
@@ -175,6 +176,13 @@ def main_gui():
     reddit = PhotoImage(file=os.path.join("res", "reddit.png"))
     reddit_button = Button(canvas, image=reddit, height=80, width=80, border=0, bg=background, command=reddit_login)
     canvas.create_window(300, 260, window=reddit_button)
+
+    opt = Label(canvas, text = "Clip Manager", bg = background, font = ("Adobe Garamond Pro", 15, "bold underline"), fg = "black")
+    canvas.create_window(200, 350, window = opt)
+
+    clip_manager = PhotoImage(file = os.path.join("res", "clip_manager.png"))
+    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = video_section)
+    canvas.create_window(200, 420, window = clip_manager_button)
     
     root.eval('tk::PlaceWindow . center')
     root.mainloop()

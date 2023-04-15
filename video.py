@@ -36,8 +36,32 @@ def generate_audio(title, text):
 
 
     
+""" Creates a video from audio and text"""
+def create_video(name, content, audio):
+    # text for video
+    text= name+content
+    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
 
-def create_video(audio_path, name, content):
+    # Set the duration of the clip the same as the length of the text
+    duration = txt_clip.duration
+
+    # audio to accompany the video
+    audio_clip = mpe.AudioFileClip(audio)
+
+    # Set the duration of the audio the same as the length of the video
+    audio_clip = audio_clip.set_duration(duration)
+
+    # merge the audio and video
+    final_clip = CompositeVideoClip([txt_clip], size=(1920,1080)).set_audio(audio_clip)
+
+    # write the video to a file
+    final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac')
+
+    return os.path.join("clips", f"{name}.mp4")
+
+
+
+
 
     """ Creates a video from audio and text"""
 

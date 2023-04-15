@@ -13,8 +13,9 @@ table = "users"
 
 def shorts_generator(post_title, post_content):
     """ Generates Video """
-    # video.create_video(video.generate_audio(), post_title, post_content)
-    video.generate_audio(post_title, post_content)
+    audio=video.generate_audio(post_title, post_content)
+    video.create_video(post_title, post_content, audio)
+    
 
 def fetch_post(community, post_id):
     """ Fetches Post """

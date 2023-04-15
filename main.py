@@ -200,24 +200,18 @@ if __name__ == "__main__":
     # make video directory if not present
     if not os.path.exists("clips"):
         os.mkdir("clips")
-    try:
-        import praw, prawcore
-        import cv2 as cv
-        import moviepy.editor as mpe
-        from gtts import gTTS
-        main_gui()
-    except ImportError:
+    if open("first_runtime.txt", "r").read()[0] == "1":
         opt = askokcancel("Install Library", "This Application requires python 'praw', OpenCV, gtts  and MoviePY libraries\nDo you wish to install it?")
         if opt:
-            # result = subprocess.run(["pip", "install", "praw"], capture_output=True)
-            # install requirements.txt
             result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 import praw, prawcore
+                open("first_runtime.txt", "w").write("0")
                 main_gui()
             else:
                 # showerror("Error", "Error!")
                 messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
-
-        
+    else:
+        import praw, prawcore
+        main_gui()

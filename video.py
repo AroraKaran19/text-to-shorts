@@ -3,8 +3,9 @@ import subprocess
 from random import randint
 from tkinter import *
 from tkinter import messagebox, filedialog
-
-
+import cv2 as cv
+import moviepy.editor as mpe
+from gtts import gTTS
 
 def generate_audio(title, text):
     """ Generates Audio from text using TTS engine"""

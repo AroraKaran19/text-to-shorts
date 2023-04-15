@@ -7,28 +7,38 @@ from tkinter import messagebox, filedialog
 try:
     import cv2 as cv
     import moviepy.editor as mpe
+    from gtts import gTTS
 except ModuleNotFoundError: # Makes sure we have required modules installed!
-    ask = messagebox.askokcancel("Require Multiple Modules!", "This script requires OpenCV and MoviePY modules\nDo you wish to install them?\n(May take some time)")
+    ask = messagebox.askokcancel("Require Multiple Modules!", "This script requires OpenCV, gtts  and MoviePY modules\nDo you wish to install them?\n(May take some time)")
     if ask:
         print("Downloading Required Modules....")
-        chk = subprocess.run(["pip", "install", "opencv-python"], capture_output=True)
-        chk2 = subprocess.run(["pip", "install", "moviepy"], capture_output=True)
-        if chk and chk2:
+        chk0 = subprocess.run(["pip", "install", "opencv-python"], capture_output=True)
+        chk1 = subprocess.run(["pip", "install", "moviepy"], capture_output=True)
+        chk2 = subprocess.run(["pip", "install", "gtts"], capture_output=True)
+        if chk0 and chk2 and chk1:
             messagebox.showinfo("Download Successfull", "Modules downloaded successfully!")
             import cv2 as cv
             import moviepy.editor as mpe
+            from gtts import gTTS
         else:
             messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
     else:
         exit()
 
 
-def generate_audio():
+def generate_audio(title, text):
     """ Generates Audio from text using TTS engine"""
-    return f"{audio_name}.mp3"
+    print(title, text)
+    speech = gTTS(title+text)
+    speech.save(os.path.join("clips", f"{title}.mp3"))
+    print("Audio Generated!")
+    return os.path.join("clips", f"{title}.mp3")
+
+
     
 
-def create_video(audio_path, text, name):
+def create_video(audio_path, name, content):
+
     """ Creates a video from audio and text"""
 
     

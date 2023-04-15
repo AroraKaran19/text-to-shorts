@@ -13,8 +13,8 @@ table = "users"
 
 def shorts_generator(post_title, post_content):
     """ Generates Video """
-    video.create_video(video.generate_audio(), post_title, post_content)
-    
+    # video.create_video(video.generate_audio(), post_title, post_content)
+    video.generate_audio(post_title, post_content)
 
 def fetch_post(community, post_id):
     """ Fetches Post """
@@ -42,7 +42,7 @@ def fetch_post(community, post_id):
         print("\n(!) Content: ", post_content)
         print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
-        create_video(post_title, post_content)
+        shorts_generator(post_title, post_content)
         
     except prawcore.exceptions.Redirect or ValueError:
         showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
@@ -184,13 +184,16 @@ def main_gui():
     canvas.create_window(200, 350, window = opt)
 
     clip_manager = PhotoImage(file = os.path.join("res", "clip_manager.png"))
-    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = video_section)
+    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = video.video_section)
     canvas.create_window(200, 420, window = clip_manager_button)
     
     root.eval('tk::PlaceWindow . center')
     root.mainloop()
     
 if __name__ == "__main__":
+    # make video directory if not present
+    if not os.path.exists("clips"):
+        os.mkdir("clips")
     try:
         import praw, prawcore
         main_gui()
@@ -204,7 +207,5 @@ if __name__ == "__main__":
                 main_gui()
             else:
                 showerror("Error", "Error!")
-    # make video directory if not present
-    if not os.path.exists("clips"):
-        os.mkdir("clips")
+
         

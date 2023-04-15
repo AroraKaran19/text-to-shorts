@@ -1,0 +1,4 @@
+praw == 7.7.0
+opencv-python >= 4.7.0
+moviepy == 1.0.3
+gtts == 2.3.1

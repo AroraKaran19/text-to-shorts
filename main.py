@@ -173,17 +173,22 @@ def main_gui():
     opt = Label(canvas, text="Choose the platform:", bg=background, font=("Adobe Garamond Pro", 15, "bold underline"), fg="black")
     canvas.create_window(200, 190, window=opt)
     
+    # open ai button
     openai = PhotoImage(file=os.path.join("res", "openai.png"))
     openai_button = Button(canvas, image=openai, height=80, width=80, border=0)
     canvas.create_window(100, 260, window=openai_button)
     
+    # reddit button
     reddit = PhotoImage(file=os.path.join("res", "reddit.png"))
     reddit_button = Button(canvas, image=reddit, height=80, width=80, border=0, bg=background, command=reddit_login)
     canvas.create_window(300, 260, window=reddit_button)
+    # reddit_img = Image.open(os.path.join('res', 'reddit.png'))
+    # reddit_button = Button(canvas, image=reddit_img, border=0, bg=BACKGROUND_COLOR, command=reddit_login)
+    # reddit_button.grid(row=2, column=1, pady=(10, 10), padx=(0, 50))
 
+    # clip manager button
     opt = Label(canvas, text = "Clip Manager", bg = background, font = ("Adobe Garamond Pro", 15, "bold underline"), fg = "black")
     canvas.create_window(200, 350, window = opt)
-
     clip_manager = PhotoImage(file = os.path.join("res", "clip_manager.png"))
     clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = video.video_section)
     canvas.create_window(200, 420, window = clip_manager_button)
@@ -197,16 +202,22 @@ if __name__ == "__main__":
         os.mkdir("clips")
     try:
         import praw, prawcore
+        import cv2 as cv
+        import moviepy.editor as mpe
+        from gtts import gTTS
         main_gui()
     except ImportError:
-        opt = askokcancel("Install Library", "This Application requires python 'praw' library\nDo you wish to install it?")
+        opt = askokcancel("Install Library", "This Application requires python 'praw', OpenCV, gtts  and MoviePY libraries\nDo you wish to install it?")
         if opt:
-            result = subprocess.run(["pip", "install", "praw"], capture_output=True)
+            # result = subprocess.run(["pip", "install", "praw"], capture_output=True)
+            # install requirements.txt
+            result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 import praw, prawcore
                 main_gui()
             else:
-                showerror("Error", "Error!")
+                # showerror("Error", "Error!")
+                messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
 
         

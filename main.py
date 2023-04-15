@@ -203,6 +203,13 @@ if __name__ == "__main__":
         opt = askokcancel("Install Library", "This Application requires python 'praw', OpenCV, gtts  and MoviePY libraries\nDo you wish to install it?")
         if opt:
             result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
+
+            # install ImageMagick since moviepy requires it
+            if os.name == "nt":
+                result = subprocess.run(["winget", "install", "-e", "--id", "ImageMagick.ImageMagick"])
+            else:
+                result = subprocess.run(["sudo", "apt-get", "install", "imagemagick"])
+
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 import praw, prawcore

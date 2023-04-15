@@ -138,11 +138,10 @@ def reddit_login():
         if one is detected, proceeds with the next step. If a client ID is not present, 
         the user is prompted to provide one. """
     if os.path.exists(db_name):
-        conn = sqlite3.connect(db_name)
-        c = conn.cursor()
-        c.execute(f"SELECT * from {table}")
-        content = c.fetchone()
-        conn.close()
+        with sqlite3.connect(db_name) as conn:
+            c = conn.cursor()
+            c.execute(f"SELECT * from {table}")
+            content = c.fetchone()
         if content is not None:
             client_id = content[0]
             opt = askyesno("Reddit API credentials", f"Currently Using:\nClient ID: {client_id}\nDo you want to continue?")

@@ -5,7 +5,6 @@ import sqlite3
 from tkinter import *
 from tkinter.messagebox import *
 from random import choice
-import video
 
 background = "#f0e68c"
 db_name = "reddit_info.db"
@@ -213,6 +212,7 @@ if __name__ == "__main__":
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 import praw, prawcore
+                import video
                 open("first_runtime.txt", "w").write("0")
                 main_gui()
             else:
@@ -220,4 +220,5 @@ if __name__ == "__main__":
                 messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
     else:
         import praw, prawcore
+        import video
         main_gui()

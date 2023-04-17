@@ -184,7 +184,7 @@ def video_section():
     address_bar = Entry(bg_canvas, font=('', 14), textvariable=address, state=DISABLED, bg="black")
     bg_canvas.create_window(240, 100, window=address_bar)
     
-    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=lambda: browsing(duration_label, address, [trim_video]), bg="black", fg="white")
+    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=lambda: browsing(duration_label, address, [trim_video, clip_audio]), bg="black", fg="white")
     bg_canvas.create_window(430, 100, window=browse)
 
     duration = "None"
@@ -193,6 +193,9 @@ def video_section():
     
     trim_video = Button(bg_canvas, text="Trim\n Video", bg="black", font=('', 10), fg="white", padx=20, command=lambda: trim_menu(address_bar.get()), state=DISABLED)
     bg_canvas.create_window(200, 200, window=trim_video)
+    
+    clip_audio = Button(bg_canvas, text="Audio\n Adder", bg="black", font=('', 10), fg="white", padx=20, state=DISABLED)
+    bg_canvas.create_window(400, 200, window=clip_audio)
 
     root.eval('tk::PlaceWindow . center')
     root.mainloop()

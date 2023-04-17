@@ -52,12 +52,11 @@ def fetch_post(community, post_id):
         print("------------------------------------------------")
         print("\n(!) Title: ", post.title)
         print("\n(!) Content: ", post.selftext)
-        print(
-            f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
+        print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
         create_video()
 
-    except prawcore.exceptions.Redirect or ValueError:
+    except:
         showerror("Invalid Community",
                   "Enter Appropriate Community Name or\nEntered community doesn't exists!")
 
@@ -153,7 +152,7 @@ def reddit_login_gui():
     canvas.create_window(200, 150, window=client_secret)
 
     save_button = Button(canvas, text="Save", bg="lime", font=('Adobe Garamond Pro', 10), pady=8,
-                         padx=10, command=lambda: (save_reddit_info(client_id.get(), client_secret.get())))
+                         padx=10, command=lambda: (save_reddit_info(client_id.get().replace("\n", ""), client_secret.get().replace("\n", ""))))
     canvas.create_window(150, 220, window=save_button)
 
     login_gui.eval('tk::PlaceWindow . center')

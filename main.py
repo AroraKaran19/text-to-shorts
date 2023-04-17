@@ -207,6 +207,9 @@ if __name__ == "__main__":
             from tkinter.messagebox import *
         except ModuleNotFoundError:
             result = subprocess.run(["sudo", "apt-get", "install", "python-tk"])
+            if result:
+                from tkinter import *
+                from tkinter.messagebox import *
         opt = askokcancel("Install Library", "This Application requires python 'praw', 'OpenCV', 'gtts'  and 'MoviePY' libraries\nDo you wish to install it?")
         if opt:
             # install ImageMagick since moviepy requires it

@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
 import os
 import subprocess
 import sqlite3
-from tkinter import *
-from tkinter.messagebox import *
 from random import choice
 
 background = "#f0e68c"
@@ -188,7 +185,7 @@ def main_gui():
     opt = Label(canvas, text = "Clip Manager", bg = background, font = ("Adobe Garamond Pro", 15, "bold underline"), fg = "black")
     canvas.create_window(200, 350, window = opt)
     clip_manager = PhotoImage(file = os.path.join("res", "clip_manager.png"))
-    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = video.video_section)
+    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = lambda: video.video_section(True))
     canvas.create_window(200, 420, window = clip_manager_button)
     
     root.eval('tk::PlaceWindow . center')
@@ -198,27 +195,35 @@ if __name__ == "__main__":
     # make video directory if not present
     if not os.path.exists("clips"):
         os.mkdir("clips")
-    if open("first_runtime.txt", "r").read()[0] == "1":
-        opt = askokcancel("Install Library", "This Application requires python 'praw', OpenCV, gtts  and MoviePY libraries\nDo you wish to install it?")
+    try:
+        import praw, prawcore
+        import video
+        from tkinter import *
+        from tkinter.messagebox import *
+        main_gui()
+    except:
+        try:
+            from tkinter import *
+            from tkinter.messagebox import *
+        except ModuleNotFoundError:
+            result = subprocess.run(["sudo", "apt-get", "install", "python-tk"])
+        opt = askokcancel("Install Library", "This Application requires python 'praw', 'OpenCV', 'gtts'  and 'MoviePY' libraries\nDo you wish to install it?")
         if opt:
-            result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
-
             # install ImageMagick since moviepy requires it
             if os.name == "nt":
                 result = subprocess.run(["winget", "install", "-e", "--id", "ImageMagick.ImageMagick"])
             else:
                 result = subprocess.run(["sudo", "apt-get", "install", "imagemagick"])
-
             if result:
-                showinfo("Install Library", "(!) Successfully Installed (!)")
-                import praw, prawcore
-                import video
-                open("first_runtime.txt", "w").write("0")
-                main_gui()
+                result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
+                if result:
+                    showinfo("Install Library", "(!) Successfully Installed (!)")
+                    import praw, prawcore
+                    import video
+                    main_gui()
+                else:
+                    showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
             else:
-                # showerror("Error", "Error!")
-                messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
-    else:
-        import praw, prawcore
-        import video
-        main_gui()
+                showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
+        else:
+            showinfo("(!) Exiting.. (!)", "Taking you back!")

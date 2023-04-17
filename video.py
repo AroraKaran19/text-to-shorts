@@ -129,6 +129,7 @@ def trim_menu(path):
     global trim_m
     trim_m = Toplevel()
     trim_m.title("Trim Video")
+    trim_m.grab_set()
     trim_m.resizable(False, False)
     
     canvas = Canvas(trim_m, bg="white", height=300, width=300)
@@ -166,16 +167,20 @@ def trim_menu(path):
     try:
         while True:
             time.set(str(end_scale.get()-start_scale.get())+" Secs")
-            video_duration.config(text=f"Duration: {time}")
+            video_duration.config(text=f"Duration: {time.get()}")
             end_scale.configure(from_=start_scale.get()+1)
             end_box.configure(from_=int(start_box.get())+1)
             trim_m.update()
     except:
         trim_m.destroy()
 
-def video_section():
+def video_section(top=False):
     """ GUI for the Video Section """
-    root = Tk()
+    if top:
+        root = Toplevel()
+        root.grab_set()
+    else:
+        root = Tk()
     root.title("Clip Manager")
     root.resizable(False, False)
     
@@ -199,7 +204,8 @@ def video_section():
     trim_video = Button(bg_canvas, text="Trim\n Video", bg="black", font=('', 10), fg="white", padx=20, command=lambda: trim_menu(address_bar.get()), state=DISABLED)
     bg_canvas.create_window(200, 200, window=trim_video)
 
-    root.eval('tk::PlaceWindow . center')
+    if not top:
+        root.eval('tk::PlaceWindow . center')
     root.mainloop()
     
 if __name__ == "__main__":

@@ -20,29 +20,32 @@ def fetch_post(community, post_id):
     c.execute(f"SELECT * from {table}")
     content = c.fetchone()
     conn.close()
-    if content is not None:
-        client_id, client_secret = content[0].replace('\n', ''), content[1].replace('\t', '')
-    reddit = praw.Reddit(client_id=client_id,
-                     client_secret=client_secret,
-                    user_agent='ytshorts')
     try:
-        subreddit = reddit.subreddit(community)
-        if post_id in ('', ' '):
-            post_id = choice(list(subreddit.new()))
-    
-        post = reddit.submission(id=post_id)
-
-        post_title=post.title
-        post_content=post.selftext
-        print("------------------------------------------------")
-        print("\n(!) Title: ", post_title)
-        print("\n(!) Content: ", post_content)
-        print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
-        print("\n------------------------------------------------")
-        shorts_generator(post_title, post_content)
+        if content is not None:
+            client_id, client_secret = content[0].replace('\n', ''), content[1].replace('\t', '')
+        reddit = praw.Reddit(client_id=client_id,
+                        client_secret=client_secret,
+                        user_agent='ytshorts')
+        try:
+            subreddit = reddit.subreddit(community)
+            if post_id in ('', ' '):
+                post_id = choice(list(subreddit.new()))
         
-    except prawcore.exceptions.Redirect or ValueError:
-        showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
+            post = reddit.submission(id=post_id)
+
+            post_title=post.title
+            post_content=post.selftext
+            print("------------------------------------------------")
+            print("\n(!) Title: ", post_title)
+            print("\n(!) Content: ", post_content)
+            print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
+            print("\n------------------------------------------------")
+            shorts_generator(post_title, post_content)
+            
+        except prawcore.exceptions.Redirect or ValueError:
+            showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
+    except prawcore.exceptions.RequestException:
+        showerror("No Internet Detected!", "Please connect to internet!")
 
 def reddit_gui():
     """ GUI for Reddit Post Scrapping """

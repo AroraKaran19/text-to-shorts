@@ -11,10 +11,9 @@ def generate_audio(title, text):
     """ Generates Audio from text using TTS engine"""
     print(title, text)
     speech = gTTS(title+text)
-    speech.save(os.path.join("clips", f"{title}.mp3"))
+    speech.save(os.path.join("clips", f"{title.replace(' ','_')}.mp3"))
     print("Audio Generated!")
-    return os.path.join("clips", f"{title}.mp3")
-
+    return os.path.join("clips", f"{title.replace(' ','_')}.mp3")
 
     
 """ Creates a video from audio and text"""

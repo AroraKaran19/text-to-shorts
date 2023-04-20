@@ -15,7 +15,7 @@ def shorts_generator(post_title, post_content):
     video.create_video(audio, content)
     
 
-def fetch_post(community, post_id):
+def fetch_post(community, post_id, gui):
     """ Fetches Post """
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
@@ -41,6 +41,7 @@ def fetch_post(community, post_id):
         print("\n(!) Content: ", post_content)
         print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
+        gui.destroy()
         shorts_generator(post_title, post_content)
         
     except prawcore.exceptions.Redirect or ValueError:
@@ -59,27 +60,31 @@ def reddit_gui():
         title = Label(canvas, text="Post Scrapper", bg=background, font=("Adobe Garamond Pro", 18, "bold"))
         canvas.create_window(350, 130, window=title)
         
-        reddit_logo = ImageTk.PhotoImage(file=os.path.join("res", "reddit.png"))
+        reddit_logo = PhotoImage(file=os.path.join("res", "reddit.png"))
         logo_label = Label(canvas, image=reddit_logo, bg=background)
         canvas.create_window(350, 60, window=logo_label)
         
         community_label = Label(canvas, text="Community:", bg=background, font=("Adobe Garamond Pro", 12, "bold"))
         canvas.create_window(195, 330, window=community_label)
-        subreddit_community = Entry(canvas, width=25, font=('', 14))
+        subreddit_community = Entry(canvas, width=25, font=('', 14), bg="#159895")
         canvas.create_window(400, 330, window=subreddit_community)
         
         post_label = Label(canvas, text="Post ID:", bg=background, font=("Adobe Garamond Pro", 12, "bold"))
         canvas.create_window(210, 380, window=post_label)
-        post_id = Entry(canvas, width=25, font=('', 14))
+        post_id = Entry(canvas, width=25, font=('', 14), bg="#159895")
         canvas.create_window(400, 380, window=post_id)
         
-        create_button = Button(canvas, text="Create Video", bg="lime", font=("Adobe Garamond Pro", 12, "bold"), pady=8, command=lambda: fetch_post(subreddit_community.get(), post_id.get()))
+        back_button = Button(canvas, text="Back", bg="red", font=("Adobe Garamond Pro", 12, "bold"), pady=5, command=lambda: (reddit_root.destroy(), main_gui()))
+        canvas.create_window(50, 50, window=back_button)
+        
+        create_button = Button(canvas, text="Create Video", bg="lime", font=("Adobe Garamond Pro", 12, "bold"), pady=8, command=lambda: fetch_post(subreddit_community.get(), post_id.get(), reddit_root))
         canvas.create_window(350, 450, window=create_button)
         
         reddit_root.eval('tk::PlaceWindow . center')
         reddit_root.mainloop()
     else:
         showerror("(!) Login Required (!)", "Please Login to use this feature!")
+        main_gui()
     
 def save_reddit_info(client_id, client_secret):
     """ Store Reddit API credentials on the local device 
@@ -93,6 +98,7 @@ def save_reddit_info(client_id, client_secret):
         if table_exists:
             c.execute("INSERT INTO users (client_id, client_secret) VALUES (?, ?)", (client_id, client_secret))
             conn.commit()
+            conn.close()
         else:
             c.execute(f"CREATE TABLE {table} ({columns})")
             save_reddit_info(client_id, client_secret)
@@ -103,6 +109,7 @@ def save_reddit_info(client_id, client_secret):
     else:
         showinfo("(!) Creating Database... (!)", "Database created!")
         conn = sqlite3.connect(db_name)
+        conn.close()
         save_reddit_info(client_id, client_secret)
         
 def reddit_login_gui():
@@ -120,13 +127,16 @@ def reddit_login_gui():
     
     client_id_label = Label(canvas, text="Client ID:", bg=background, font=("Adobe Garamond Pro", 10, "bold"))
     canvas.create_window(70, 100, window=client_id_label)
-    client_id = Entry(canvas, width=25, font=('', 10))
+    client_id = Entry(canvas, width=25, font=('', 10), bg="#159895")
     canvas.create_window(200, 100, window=client_id)
     
     client_secret_label = Label(canvas, text="Client Secret:", bg=background, font=("Adobe Garamond Pro", 10, "bold"))
     canvas.create_window(60, 150, window=client_secret_label)
-    client_secret = Entry(canvas, width=25, font=('', 10))
+    client_secret = Entry(canvas, width=25, font=('', 10), bg="#159895")
     canvas.create_window(200, 150, window=client_secret)
+    
+    exit_button = Button(canvas, text="Exit", bg="red", font=('Adobe Garamond Pro', 10), pady=5, padx=6, command=lambda: (login_gui.destroy(), main_gui()))
+    canvas.create_window(30, 30, window=exit_button)
 
     save_button = Button(canvas, text="Save", bg="lime", font=('Adobe Garamond Pro', 10), pady=8, padx=10, command=lambda: (save_reddit_info(client_id.get(), client_secret.get())))
     canvas.create_window(150, 220, window=save_button)
@@ -134,7 +144,7 @@ def reddit_login_gui():
     login_gui.eval('tk::PlaceWindow . center')
     login_gui.mainloop()
     
-def reddit_login(gui):
+def reddit_login():
     """ The system verifies the presence of Reddit API credentials for the user and, 
         if one is detected, proceeds with the next step. If a client ID is not present, 
         the user is prompted to provide one. """
@@ -148,8 +158,7 @@ def reddit_login(gui):
             opt = askyesno("Reddit API credentials", f"Currently Using:\nClient ID: {client_id}\nDo you want to continue?")
             if opt:
                 root.destroy()
-                gui.destroy()
-                main_gui()
+                reddit_gui()
             else:
                 showwarning("Process Cancelled!", "Getting you Back....")
     else:
@@ -159,8 +168,8 @@ def reddit_login(gui):
             reddit_login_gui()
             
 def logout(gui):
-    os.remove("reddit_info.db")
     gui.destroy()
+    os.remove("reddit_info.db")
     main_gui()
 
 def main_gui():
@@ -195,7 +204,7 @@ def main_gui():
     
     # reddit button
     reddit = PhotoImage(file=os.path.join("res", "reddit.png"))
-    reddit_button = Button(canvas, image=reddit, height=80, width=80, border=0, bg=background, command=reddit_gui)
+    reddit_button = Button(canvas, image=reddit, height=80, width=80, border=0, bg=background, command=lambda: (root.destroy(), reddit_gui()))
     canvas.create_window(640, 380, window=reddit_button)
 
     # clip manager button
@@ -206,7 +215,7 @@ def main_gui():
         logout_button = Button(canvas, text="Logout", fg="black", font=('', 15), height=2, width=10, bg="#10A37F", command=lambda: logout(root))
         canvas.create_window(900, 50, window=logout_button)
     else:
-        login_button = Button(canvas, text="Login", fg="black", font=('', 15), height=2, width=10, bg="#10A37F", command=lambda: reddit_login(root))
+        login_button = Button(canvas, text="Login", fg="black", font=('', 15), height=2, width=10, bg="#10A37F", command=lambda: reddit_login())
         canvas.create_window(900, 50, window=login_button)
     
     root.eval('tk::PlaceWindow . center')

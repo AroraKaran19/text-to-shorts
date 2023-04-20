@@ -211,19 +211,6 @@ if __name__ == "__main__":
             result = subprocess.run(["sudo", "apt-get", "install", "python-tk"])
         opt = askokcancel("Install Library", "This Application requires python 'praw', 'OpenCV', 'gtts'  and 'MoviePY' libraries\nDo you wish to install it?")
         if opt:
-            try:
-                if os.name == "nt":
-                    result = subprocess.run(["magick", "identify", "--version"], capture_output=True)
-                else:
-                    result = subprocess.run(["convert", "--version"], capture_output=True)
-            except FileNotFoundError:
-                # install ImageMagick since moviepy requires it
-                if os.name == "nt":
-                    result = subprocess.run(["winget", "install", "-e", "--id", "ImageMagick.ImageMagick"])
-                else:
-                    result = subprocess.run(["sudo", "apt-get", "install", "imagemagick"])
-            except:
-                showerror("Error!", "Error Occured!\nWhile installing 'ImageMagick' \nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
             result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
             if result:
                 showinfo("Install Library", "(!) Successfully Installed (!)")

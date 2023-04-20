@@ -11,10 +11,9 @@ def generate_audio(title, text):
     """ Generates Audio from text using TTS engine"""
     print(title, text)
     speech = gTTS(title+text)
-    speech.save(os.path.join("clips", f"{title.replace(' ','_')}.mp3"))
+    speech.save(os.path.join("clips", f"{title}.mp3"))
     print("Audio Generated!")
-    return os.path.join("clips", f"{title.replace(' ','_')}.mp3")
-
+    return os.path.join("clips", f"{title}.mp3")
     
 """ Creates a video from audio and text"""
 def create_video(name, content, audio):
@@ -53,9 +52,6 @@ def create_video(name, content, audio):
     final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac', temp_audiofile='temp-audio.m4a', remove_temp=True, write_logfile=False, verbose=False)
 
     return os.path.join("clips", f"{name}.mp4")
-
-
-
     
 def clip_duration(path):
     from moviepy.video.io.VideoFileClip import VideoFileClip
@@ -77,22 +73,15 @@ def browsing(duration_label, address, buttons):
         else:
             ret, frame = cap.read()
             if not ret:
-                cap.release()
                 messagebox.showerror("Error!", "Error reading first frame of video file!")
             else:
                 # If the video file is not corrupt
                 address.set(file_path)
-                duration = [0, 0, 0] # Arranges the duration of the clip from seconds to formatted time.
-                duration[2] = clip_duration(file_path)
-                if duration[2] > 59:
-                    duration[0]+=(duration[2]//3600)
-                    duration[1]=(duration[2]-duration[0]*3600)//60
-                    duration[2]=(duration[2]-duration[1]*60)%60
-                duration = f"{duration[0]} hours {duration[1]} mins {duration[2]} secs"
+                duration = time_(clip_duration(file_path), "formatted")
                 duration_label.config(text=f"Duration: {duration}")
                 for button in buttons:
                     button.config(state=NORMAL)
-                cap.release()
+            cap.release()
                 
 def choose_out_path(address, button):
     out_path = filedialog.askdirectory(initialdir="/", title="Output Folder")
@@ -124,6 +113,18 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
         else:
             messagebox.showerror("Error!", "The Video doesn't Exist!")
                 
+def time_(time, type="unformatted"):
+    duration = [0, 0, time]
+    duration[0]+=(duration[2]//3600)
+    duration[1]=(duration[2]-duration[0]*3600)//60
+    duration[2]=(duration[2]-duration[1]*60)%60
+    if type == "unformatted":
+        return f"{duration[0]}:{duration[1]}:{duration[2]}"
+    elif type == "formatted":
+        return f"{duration[0]} Hours {duration[1]} Mins {duration[2]} Secs"
+    else:
+        return None
+
 def trim_menu(path):
     global trim_m
     trim_m = Toplevel()
@@ -134,7 +135,8 @@ def trim_menu(path):
     canvas = Canvas(trim_m, bg="white", height=300, width=300)
     canvas.pack()
     
-    start_label = Label(canvas, text="Start (in secs)", bg="white", fg="black", font=("", 12))
+    start_time = "None"
+    start_label = Label(canvas, text=f"Start: {start_time}", bg="white", fg="black", font=("", 12))
     canvas.create_window(80, 20, window=start_label)
     start_point = StringVar()
     start_scale = Scale(canvas, from_=0, to=clip_duration(path)-1, orient=HORIZONTAL, bg="white", fg="black", length=120, variable=start_point)
@@ -142,7 +144,8 @@ def trim_menu(path):
     start_box = Spinbox(canvas, textvariable=start_point, bg="white", fg="black", from_=0, to=clip_duration(path)-1)
     canvas.create_window(80, 100, window=start_box)
     
-    end_label = Label(canvas, text="End (in secs)", bg="white", fg="black", font=("", 12))
+    end_time = "None"
+    end_label = Label(canvas, text=f"End: {end_time}", bg="white", fg="black", font=("", 12))
     canvas.create_window(220, 20, window=end_label)
     end_point = StringVar()
     end_scale = Scale(canvas, from_=0, to=clip_duration(path), orient=HORIZONTAL, bg="white", fg="black", length=120, variable=end_point)
@@ -165,11 +168,18 @@ def trim_menu(path):
     
     try:
         while True:
-            time.set(str(end_scale.get()-start_scale.get())+" Secs")
+            start_label.config(text=f"Start: {time_(start_scale.get())}")
+            end_label.config(text=f"End: {time_(end_scale.get())}")
+            time.set(time_(end_scale.get()-start_scale.get()))
             video_duration.config(text=f"Duration: {time.get()}")
             end_scale.configure(from_=start_scale.get()+1)
             end_box.configure(from_=int(start_box.get())+1)
             trim_m.update()
+            
+    except ValueError: # Temp Fix
+        messagebox.showerror("Error!", "Value can't be left empty or be ZERO!")
+        trim_m.destroy()
+    
     except:
         trim_m.destroy()
 

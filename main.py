@@ -1,221 +1,235 @@
 import os
 import subprocess
-from random import randint
-from tkinter import *
-from tkinter import messagebox, filedialog
-import cv2 as cv
-import moviepy.editor as mpe
-from gtts import gTTS
+import sqlite3
+from random import choice
 
-def generate_audio(title, text):
-    """ Generates Audio from text using TTS engine"""
-    print(title, text)
-    speech = gTTS(title+text)
-    speech.save(os.path.join("clips", f"{title}.mp3"))
-    print("Audio Generated!")
-    return os.path.join("clips", f"{title}.mp3")
-    
-""" Creates a video from audio and text"""
-def create_video(name, content, audio):
-    # text for video
-    text= name+content
-    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
+background = "#f0e68c"
+db_name = "reddit_info.db"
+table = "users"
 
-    # Set the duration of the clip the same as the length of the text
-    # duration = txt_clip.duration
-    # txt_clip = txt_clip.set_duration(duration)
-
-
-    # # audio to accompany the video
-    # audio_clip = mpe.AudioFileClip(audio)
-
-    # # Set the duration of the audio the same as the length of the video
-
-    # audio_clip = audio_clip.set_duration(duration)
-    # Calculate the duration of the clip
-    duration = len(content) * 0.1
-
-    # Create text clip with the specified duration
-    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
-    txt_clip = txt_clip.set_duration(duration)
-
-
-    # Load audio clip and set the duration
-    audio_clip = mpe.AudioFileClip(audio).set_duration(duration)
+def shorts_generator(post_title, post_content):
+    """ Generates Video """
+    audio=video.generate_audio(post_title, post_content)
+    video.create_video(post_title, post_content, audio)
     
 
-
-    # merge the audio and video
-    final_clip = mpe.CompositeVideoClip([txt_clip], size=(1920,1080)).set_audio(audio_clip)
-
-    # write the video to a file
-    final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac', temp_audiofile='temp-audio.m4a', remove_temp=True, write_logfile=False, verbose=False)
-
-    return os.path.join("clips", f"{name}.mp4")
+def fetch_post(community, post_id):
+    """ Fetches Post """
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+    c.execute(f"SELECT * from {table}")
+    content = c.fetchone()
+    conn.close()
+    if content is not None:
+        client_id, client_secret = content[0].replace('\n', ''), content[1].replace('\t', '')
+    reddit = praw.Reddit(client_id=client_id,
+                     client_secret=client_secret,
+                    user_agent='ytshorts')
+    try:
+        subreddit = reddit.subreddit(community)
+        if post_id in ('', ' '):
+            post_id = choice(list(subreddit.new()))
     
-def clip_duration(path):
-    from moviepy.video.io.VideoFileClip import VideoFileClip
-    clip = VideoFileClip(path)
-    return int(clip.duration)
+        post = reddit.submission(id=post_id)
 
-def browsing(duration_label, address, buttons):
-    """ Dialog to choose a video File """
-    file_path = filedialog.askopenfilename(initialdir="/", filetypes =[('MP4', '*.mp4'), ('MOV', '*.mov'), ('AVI', '*.avi'), ('MKV', "*.mkv"), ("All Files", "*.*")], title="Choose Video")
-    if os.path.exists(file_path):
-        cap = cv.VideoCapture(file_path)
-        if not cap.isOpened():
-            address.set("ERROR!!")
-            duration = "Error"
-            duration_label.config(text=f"Duration: {duration}")
-            for button in buttons:
-                button.config(state=DISABLED)
-            messagebox.showerror("Error!", "Error opening video file!")
-        else:
-            ret, frame = cap.read()
-            if not ret:
-                messagebox.showerror("Error!", "Error reading first frame of video file!")
-            else:
-                # If the video file is not corrupt
-                address.set(file_path)
-                duration = time_(clip_duration(file_path), "formatted")
-                duration_label.config(text=f"Duration: {duration}")
-                for button in buttons:
-                    button.config(state=NORMAL)
-            cap.release()
-                
-def choose_out_path(address, button):
-    out_path = filedialog.askdirectory(initialdir="/", title="Output Folder")
-    if os.path.isdir(out_path):
-        address.set(out_path)
-        button.config(state=NORMAL)
-                
-def trim_video(vid_path, out_path, start_time, end_time, self_button):
-    if out_path not in ("", " "):
-        if os.path.exists(vid_path):
-            from moviepy.video.io.VideoFileClip import VideoFileClip
-            self_button.config(state=DISABLED)
-            video_clip = VideoFileClip(vid_path)
-            video_extn = str(vid_path[-4:])
-            
-            trimmed_clip = video_clip.subclip(int(start_time), int(end_time))
-            trimmed_vid = out_path+"/trimmed-"+str(randint(1000000,99999999))+video_extn
-            while True:
-                if os.path.exists(trimmed_vid):
-                    trimmed_vid = out_path+"/trimmed-"+str(randint(1000000,99999999))+video_extn
-                else:
-                    break
-            
-            print("Wait.... the video is being trimmed! (may take time dependant on the clip)")
-            trimmed_clip.write_videofile(trimmed_vid, logger=None)
-            messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
-            trim_m.destroy()
-            
-        else:
-            messagebox.showerror("Error!", "The Video doesn't Exist!")
-                
-def time_(time, type="unformatted"):
-    duration = [0, 0, time]
-    duration[0]+=(duration[2]//3600)
-    duration[1]=(duration[2]-duration[0]*3600)//60
-    duration[2]=(duration[2]-duration[1]*60)%60
-    if type == "unformatted":
-        return f"{duration[0]}:{duration[1]}:{duration[2]}"
-    elif type == "formatted":
-        return f"{duration[0]} Hours {duration[1]} Mins {duration[2]} Secs"
-    else:
-        return None
+        post_title=post.title
+        post_content=post.selftext
+        print("------------------------------------------------")
+        print("\n(!) Title: ", post_title)
+        print("\n(!) Content: ", post_content)
+        print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
+        print("\n------------------------------------------------")
+        shorts_generator(post_title, post_content)
+        
+    except prawcore.exceptions.Redirect or ValueError:
+        showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")
 
-def trim_menu(path):
-    global trim_m
-    trim_m = Toplevel()
-    trim_m.title("Trim Video")
-    trim_m.grab_set()
-    trim_m.resizable(False, False)
+def reddit_gui():
+    """ GUI for Reddit Post Scrapping """
+    reddit_root = Tk()
+    reddit_root.title(" ൠ    Reddit Scrapper")
+    reddit_root.resizable(False, False)
     
-    canvas = Canvas(trim_m, bg="white", height=300, width=300)
+    canvas = Canvas(reddit_root, height=550, width=700, bg=background)
     canvas.pack()
     
-    start_time = "None"
-    start_label = Label(canvas, text=f"Start: {start_time}", bg="white", fg="black", font=("", 12))
-    canvas.create_window(80, 20, window=start_label)
-    start_point = StringVar()
-    start_scale = Scale(canvas, from_=0, to=clip_duration(path)-1, orient=HORIZONTAL, bg="white", fg="black", length=120, variable=start_point)
-    canvas.create_window(80, 60, window=start_scale)
-    start_box = Spinbox(canvas, textvariable=start_point, bg="white", fg="black", from_=0, to=clip_duration(path)-1)
-    canvas.create_window(80, 100, window=start_box)
+    title = Label(canvas, text="Post Scrapper", bg=background, font=("Adobe Garamond Pro", 18, "bold"))
+    canvas.create_window(350, 130, window=title)
     
-    end_time = "None"
-    end_label = Label(canvas, text=f"End: {end_time}", bg="white", fg="black", font=("", 12))
-    canvas.create_window(220, 20, window=end_label)
-    end_point = StringVar()
-    end_scale = Scale(canvas, from_=0, to=clip_duration(path), orient=HORIZONTAL, bg="white", fg="black", length=120, variable=end_point)
-    canvas.create_window(220, 60, window=end_scale)
-    end_box = Spinbox(canvas, textvariable=end_point, bg="white", fg="black", from_=0, to=clip_duration(path))
-    canvas.create_window(220, 100, window=end_box)
+    reddit_logo = PhotoImage(file=os.path.join("res", "reddit.png"))
+    logo_label = Label(canvas, image=reddit_logo, bg=background)
+    canvas.create_window(350, 60, window=logo_label)
     
-    trim = Button(canvas, text="TRIM", font=('', 10), command=lambda: trim_video(path, output_path.get(), start_point.get(), end_point.get(), trim), bg="black", fg="white", state=DISABLED)
-    canvas.create_window(150, 220, window=trim)
+    community_label = Label(canvas, text="Community:", bg=background, font=("Adobe Garamond Pro", 12, "bold"))
+    canvas.create_window(195, 330, window=community_label)
+    subreddit_community = Entry(canvas, width=25, font=('', 14))
+    canvas.create_window(400, 330, window=subreddit_community)
     
-    address = StringVar()
-    output_path = Entry(canvas, font=('', 12), textvariable=address, state=DISABLED, bg="black")
-    canvas.create_window(100, 180, window=output_path)
-    browse = Button(canvas, text="Choose Path", font=('', 8), command=lambda: choose_out_path(address, trim), bg="black", fg="white")
-    canvas.create_window(240, 180, window=browse)
+    post_label = Label(canvas, text="Post ID:", bg=background, font=("Adobe Garamond Pro", 12, "bold"))
+    canvas.create_window(210, 380, window=post_label)
+    post_id = Entry(canvas, width=25, font=('', 14))
+    canvas.create_window(400, 380, window=post_id)
     
-    time = StringVar()
-    video_duration = Label(canvas, text=f"Duration: {time}", bg="white", fg="black", font=("", 8))
-    canvas.create_window(150, 140, window=video_duration)
+    create_button = Button(canvas, text="Create Video", bg="lime", font=("Adobe Garamond Pro", 12, "bold"), pady=8, command=lambda: fetch_post(subreddit_community.get(), post_id.get()))
+    canvas.create_window(350, 450, window=create_button)
     
-    try:
-        while True:
-            start_label.config(text=f"Start: {time_(start_scale.get())}")
-            end_label.config(text=f"End: {time_(end_scale.get())}")
-            time.set(time_(end_scale.get()-start_scale.get()))
-            video_duration.config(text=f"Duration: {time.get()}")
-            end_scale.configure(from_=start_scale.get()+1)
-            end_box.configure(from_=int(start_box.get())+1)
-            trim_m.update()
-            
-    except ValueError: # Temp Fix
-        messagebox.showerror("Error!", "Value can't be left empty or be ZERO!")
-        trim_m.destroy()
+    reddit_root.eval('tk::PlaceWindow . center')
+    reddit_root.mainloop()
     
-    except:
-        trim_m.destroy()
-
-def video_section(top=False):
-    """ GUI for the Video Section """
-    if top:
-        root = Toplevel()
-        root.grab_set()
+def save_reddit_info(client_id, client_secret):
+    """ Store Reddit API credentials on the local device 
+        for streamlined access and usage."""
+    columns = "client_id TEXT, client_secret TEXT"
+    if os.path.exists(db_name):
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+        table_exists = c.fetchone() is not None
+        if table_exists:
+            c.execute("INSERT INTO users (client_id, client_secret) VALUES (?, ?)", (client_id, client_secret))
+            conn.commit()
+        else:
+            c.execute(f"CREATE TABLE {table} ({columns})")
+            save_reddit_info(client_id, client_secret)
+            conn.close()
+            showinfo("(!) Login (!)", "Info Saved Successfully!")
+            login_gui.destroy()
+            reddit_gui()
     else:
-        root = Tk()
-    root.title("Clip Manager")
+        showinfo("(!) Creating Database... (!)", "Database created!")
+        conn = sqlite3.connect(db_name)
+        save_reddit_info(client_id, client_secret)
+        
+def reddit_login_gui():
+    """ GUI for storing Reddit API credentials """
+    global login_gui
+    login_gui = Tk()
+    login_gui.title("Login")
+    login_gui.resizable(False,False)
+    
+    canvas = Canvas(login_gui, bg=background, height=300, width=300)
+    canvas.pack()
+    
+    login_label = Label(canvas, text="Login", bg=background, font=('Adobe Garamond Pro', 20, "bold"))
+    canvas.create_window(150, 30, window=login_label)
+    
+    client_id_label = Label(canvas, text="Client ID:", bg=background, font=("Adobe Garamond Pro", 10, "bold"))
+    canvas.create_window(70, 100, window=client_id_label)
+    client_id = Entry(canvas, width=25, font=('', 10))
+    canvas.create_window(200, 100, window=client_id)
+    
+    client_secret_label = Label(canvas, text="Client Secret:", bg=background, font=("Adobe Garamond Pro", 10, "bold"))
+    canvas.create_window(60, 150, window=client_secret_label)
+    client_secret = Entry(canvas, width=25, font=('', 10))
+    canvas.create_window(200, 150, window=client_secret)
+
+    save_button = Button(canvas, text="Save", bg="lime", font=('Adobe Garamond Pro', 10), pady=8, padx=10, command=lambda: (save_reddit_info(client_id.get(), client_secret.get())))
+    canvas.create_window(150, 220, window=save_button)
+    
+    login_gui.eval('tk::PlaceWindow . center')
+    login_gui.mainloop()
+    
+def reddit_login():
+    """ The system verifies the presence of Reddit API credentials for the user and, 
+        if one is detected, proceeds with the next step. If a client ID is not present, 
+        the user is prompted to provide one. """
+    if os.path.exists(db_name):
+        with sqlite3.connect(db_name) as conn:
+            c = conn.cursor()
+            c.execute(f"SELECT * from {table}")
+            content = c.fetchone()
+        if content is not None:
+            client_id = content[0]
+            opt = askyesno("Reddit API credentials", f"Currently Using:\nClient ID: {client_id}\nDo you want to continue?")
+            if opt:
+                root.destroy()
+                reddit_gui()
+            else:
+                showwarning("Process Cancelled!", "Getting you Back....")
+    else:
+        opt = askyesno("Reddit API credentials", "Currently We don't have your Reddit API credentials\nDo you wish to add API credentials")
+        if opt:
+            root.destroy()
+            reddit_login_gui()
+
+def main_gui():
+    """ HOME Page """
+    global root
+    root = Tk()
+    root.title("Text To Shorts")
     root.resizable(False, False)
     
-    bg_canvas = Canvas(root, height=600, width=600, bg="white")
-    bg_canvas.pack()
+    canvas = Canvas(root, height=600, width=400, bg=background)
+    canvas.pack()
     
-    title = Label(bg_canvas, text="Clip Manager", font=('Minion Pro', 20, "bold"), bg="white")
-    bg_canvas.create_window(300, 30, window=title)
-
-    address = StringVar()
-    address_bar = Entry(bg_canvas, font=('', 14), textvariable=address, state=DISABLED, bg="black")
-    bg_canvas.create_window(240, 100, window=address_bar)
+    title = Label(canvas, text="Short Video\nGenerator", bg=background, font=('Terminal', 30, "bold"), fg="black")
+    canvas.create_window(200, 80, window=title)
     
-    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=lambda: browsing(duration_label, address, [trim_video]), bg="black", fg="white")
-    bg_canvas.create_window(430, 100, window=browse)
-
-    duration = "None"
-    duration_label = Label(bg_canvas, text=f"Duration: {duration}", font=('Minion Pro', 12), bg="white")
-    bg_canvas.create_window(240, 140, window=duration_label)
+    opt = Label(canvas, text="Choose the platform:", bg=background, font=("Adobe Garamond Pro", 15, "bold underline"), fg="black")
+    canvas.create_window(200, 190, window=opt)
     
-    trim_video = Button(bg_canvas, text="Trim\n Video", bg="black", font=('', 10), fg="white", padx=20, command=lambda: trim_menu(address_bar.get()), state=DISABLED)
-    bg_canvas.create_window(200, 200, window=trim_video)
+    # open ai button
+    openai = PhotoImage(file=os.path.join("res", "openai.png"))
+    openai_button = Button(canvas, image=openai, height=80, width=80, border=0)
+    canvas.create_window(100, 260, window=openai_button)
+    
+    # reddit button
+    reddit = PhotoImage(file=os.path.join("res", "reddit.png"))
+    reddit_button = Button(canvas, image=reddit, height=80, width=80, border=0, bg=background, command=reddit_login)
+    canvas.create_window(300, 260, window=reddit_button)
 
-    if not top:
-        root.eval('tk::PlaceWindow . center')
+    # clip manager button
+    opt = Label(canvas, text = "Clip Manager", bg = background, font = ("Adobe Garamond Pro", 15, "bold underline"), fg = "black")
+    canvas.create_window(200, 350, window = opt)
+    clip_manager = PhotoImage(file = os.path.join("res", "clip_manager.png"))
+    clip_manager_button = Button(canvas, image = clip_manager, height = 80, width = 80, border = 0, bg = background, command = lambda: video.video_section(True))
+    canvas.create_window(200, 420, window = clip_manager_button)
+    
+    root.eval('tk::PlaceWindow . center')
     root.mainloop()
     
 if __name__ == "__main__":
-    video_section()
+    # make video directory if not present
+    if not os.path.exists("clips"):
+        os.mkdir("clips")
+    try:
+        import praw, prawcore
+        import video
+        from tkinter import *
+        from tkinter.messagebox import *
+        if os.name == "nt":
+            result = subprocess.run(["magick", "identify", "--version"], capture_output=True)
+        else:
+            result = subprocess.run(["convert", "--version"], capture_output=True)
+        main_gui()
+    except:
+        try:
+            from tkinter import *
+            from tkinter.messagebox import *
+        except ModuleNotFoundError:
+            result = subprocess.run(["sudo", "apt-get", "install", "python-tk"])
+        opt = askokcancel("Install Library", "This Application requires python 'praw', 'OpenCV', 'gtts'  and 'MoviePY' libraries\nDo you wish to install it?")
+        if opt:
+            try:
+                if os.name == "nt":
+                    result = subprocess.run(["magick", "identify", "--version"], capture_output=True)
+                else:
+                    result = subprocess.run(["convert", "--version"], capture_output=True)
+            except FileNotFoundError:
+                # install ImageMagick since moviepy requires it
+                if os.name == "nt":
+                    result = subprocess.run(["winget", "install", "-e", "--id", "ImageMagick.ImageMagick"])
+                else:
+                    result = subprocess.run(["sudo", "apt-get", "install", "imagemagick"])
+            except:
+                showerror("Error!", "Error Occured!\nWhile installing 'ImageMagick' \nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
+            result = subprocess.run(["pip", "install", "-r", "requirements.txt"])
+            if result:
+                showinfo("Install Library", "(!) Successfully Installed (!)")
+                import praw, prawcore
+                import video
+                main_gui()
+            else:
+                showerror("Error!!", "Error Occured!\nWhile Installing from Requirements.txt\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
+        else:
+            showinfo("(!) Exiting.. (!)", "Taking you back!")

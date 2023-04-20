@@ -7,6 +7,11 @@ background = "white"
 db_name = "reddit_info.db"
 table = "users"
 
+def on_close(gui):
+    result = askokcancel("Exit", "Do you want to exit?")
+    if result:
+        gui.destroy()
+
 def shorts_generator(post_title, post_content):
     """ Generates Video """
     audio=video.generate_audio(post_title.replace("?",""    ), post_content)
@@ -81,6 +86,7 @@ def reddit_gui():
         canvas.create_window(350, 450, window=create_button)
         
         reddit_root.eval('tk::PlaceWindow . center')
+        reddit_root.protocol("WM_DELETE_WINDOW", lambda: on_close(reddit_root))
         reddit_root.mainloop()
     else:
         showerror("(!) Login Required (!)", "Please Login to use this feature!")
@@ -142,6 +148,7 @@ def reddit_login_gui():
     canvas.create_window(150, 220, window=save_button)
     
     login_gui.eval('tk::PlaceWindow . center')
+    login_gui.protocol("WM_DELETE_WINDOW", lambda: on_close(login_gui))
     login_gui.mainloop()
     
 def reddit_login():
@@ -199,7 +206,7 @@ def main_gui():
     
     # open ai button
     openai = PhotoImage(file=os.path.join("res", "openai.png"))
-    openai_button = Button(canvas, image=openai, height=80, width=80, border=0)
+    openai_button = Button(canvas, image=openai, height=80, width=80, border=0, command=lambda: showinfo("Coming Soon!", "This feature will be available in the next update!"))
     canvas.create_window(360, 380, window=openai_button)
     
     # reddit button
@@ -219,6 +226,7 @@ def main_gui():
         canvas.create_window(900, 50, window=login_button)
     
     root.eval('tk::PlaceWindow . center')
+    root.protocol("WM_DELETE_WINDOW", lambda: on_close(root))
     root.mainloop()
     
 if __name__ == "__main__":

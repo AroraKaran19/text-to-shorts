@@ -11,6 +11,7 @@ def shorts_generator(post_title, post_content):
     """ Generates Video """
     audio=video.generate_audio(post_title, post_content)
     content=post_title+post_content
+    content= "\n".join([" ".join(content.split()[i:i+18]) for i in range(0, len(content.split()), 18)])
     video.create_video(audio, content)
     
 

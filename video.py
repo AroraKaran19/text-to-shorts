@@ -1,39 +1,82 @@
 import os
+import subprocess
+from random import randint
 from tkinter import *
 from tkinter import messagebox, filedialog
+import cv2 as cv
+import moviepy.editor as mpe
+from gtts import gTTS
 
-try:
-    import cv2 as cv
-    import moviepy.editor as mpe
-except ModuleNotFoundError: # Makes sure we have required modules installed!
-    ask = messagebox.askokcancel("Require Multiple Modules!", "This script requires OpenCV and MoviePY modules\nDo you wish to install them?\n(May take some time)")
-    if ask:
-        import subprocess
-        print("Downloading Required Modules....")
-        chk = subprocess.run(["pip", "install", "opencv-python"], capture_output=True)
-        chk2 = subprocess.run(["pip", "install", "moviepy"], capture_output=True)
-        if not chk.returncode and not chk2.returncode:
-            messagebox.showinfo("Download Successfull", "Modules downloaded successfully!")
-            import cv2 as cv
-            import moviepy.editor as mpe
-        else:
-            messagebox.showerror("Error!!", "Error Occured!\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
+def generate_audio(title, text):
+    """ Generates Audio from text using TTS engine"""
+    print(title, text)
+    speech = gTTS(title+text)
+    speech.save(os.path.join("clips", f"{title.replace(' ','_')}.mp3"))
+    print("Audio Generated!")
+    return os.path.join("clips", f"{title.replace(' ','_')}.mp3")
+    
+    
+""" Creates a video from audio and text"""
+def create_video(audio, text=None):
+    # Set up the video file name and path
+    video_file = os.path.join(os.path.splitext(audio)[0] + ".mp4")
+
+    # Get audio duration
+    audio_duration = float(subprocess.check_output(['ffprobe', '-i', audio, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")]).strip())
+
+    # Create the video using FFmpeg with text overlay
+    if text:
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-f", "lavfi",
+            "-i", f"color=c=white:s=1920x1080:d={audio_duration + 1}",
+            "-vf", f"drawtext=fontfile=/path/to/font.ttf:fontsize=30:text='{text}':x=(w-text_w)/2:y=(h-text_h)/2",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-t", str(audio_duration + 1),
+            video_file
+        ])
+    # Create the video using FFmpeg without text overlay
     else:
-        exit()
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-f", "lavfi",
+            "-i", f"color=c=white:s=640x480:d={audio_duration + 1}",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-t", str(audio_duration + 1),
+            video_file
+        ])
 
-def create_video():
-    print()
+    # Add audio to the video using FFmpeg
+    subprocess.call([
+        "ffmpeg",
+        "-y",
+        "-i", video_file,
+        "-i", audio,
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-shortest",
+        os.path.join(os.path.splitext(audio)[0] + "_video.mp4")
+    ])
+    
+    os.remove(video_file)
+    # Check if video was created and return True or False
+    if os.path.exists(os.path.join(os.path.splitext(audio)[0] + "_video.mp4")):
+        return True
+    else:
+        return False
     
 def clip_duration(path):
     from moviepy.video.io.VideoFileClip import VideoFileClip
     clip = VideoFileClip(path)
-    duration = int(clip.duration)
-    clip.close()
-    return duration
+    return int(clip.duration)
 
 def browsing(duration_label, address, buttons):
     """ Dialog to choose a video File """
-    file_path = filedialog.askopenfilename(initialdir="/", filetypes =[('MP4', '*.mp4'), ('MOV', '*.mov'), ('AVI', '*.avi'), ('MKV', "*.mkv")], title="Choose Video")
+    file_path = filedialog.askopenfilename(initialdir="/", filetypes =[('MP4', '*.mp4'), ('MOV', '*.mov'), ('AVI', '*.avi'), ('MKV', "*.mkv"), ("All Files", "*.*")], title="Choose Video")
     if os.path.exists(file_path):
         cap = cv.VideoCapture(file_path)
         if not cap.isOpened():
@@ -46,22 +89,15 @@ def browsing(duration_label, address, buttons):
         else:
             ret, frame = cap.read()
             if not ret:
-                cap.release()
                 messagebox.showerror("Error!", "Error reading first frame of video file!")
             else:
                 # If the video file is not corrupt
                 address.set(file_path)
-                duration = [0, 0, 0] # Arranges the duration of the clip from seconds to formatted time.
-                duration[2] = clip_duration(file_path)
-                if duration[2] > 59:
-                    duration[0]+=(duration[2]//3600)
-                    duration[1]=(duration[2]-duration[0]*3600)//60
-                    duration[2]=(duration[2]-duration[1]*60)%60
-                duration = f"{duration[0]} hours {duration[1]} mins {duration[2]} secs"
+                duration = time_(clip_duration(file_path), "formatted")
                 duration_label.config(text=f"Duration: {duration}")
                 for button in buttons:
                     button.config(state=NORMAL)
-                cap.release()
+            cap.release()
                 
 def choose_out_path(address, button):
     out_path = filedialog.askdirectory(initialdir="/", title="Output Folder")
@@ -76,11 +112,8 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
             self_button.config(state=DISABLED)
             video_clip = VideoFileClip(vid_path)
             video_extn = str(vid_path[-4:])
-            if video_extn == ".mkv":
-                video_codec = "libx264"
             
             trimmed_clip = video_clip.subclip(int(start_time), int(end_time))
-            from random import randint
             trimmed_vid = out_path+"/trimmed-"+str(randint(1000000,99999999))+video_extn
             while True:
                 if os.path.exists(trimmed_vid):
@@ -89,35 +122,30 @@ def trim_video(vid_path, out_path, start_time, end_time, self_button):
                     break
             
             print("Wait.... the video is being trimmed! (may take time dependant on the clip)")
-            try:
-                if video_extn == ".mkv":
-                    trimmed_clip.write_videofile(trimmed_vid, logger=None, codec=video_codec)
-                else:
-                    trimmed_clip.write_videofile(trimmed_vid, logger=None)
-                messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
-                print("Video Trimmed Successfully!")
-            except:
-                messagebox.showerror("Error Occured!", "Please report this error!\nhttps://github.com/AroraKaran19/text-to-shorts/issues")
-                print("Error Occured! Please report this on https://github.com/AroraKaran19/text-to-shorts/issues")
+            trimmed_clip.write_videofile(trimmed_vid, logger=None)
+            messagebox.showinfo("Successfully Trimmed!", "Video Clip has been successfully trimmed!")
             trim_m.destroy()
             
         else:
             messagebox.showerror("Error!", "The Video doesn't Exist!")
-    else:
-        messagebox.showerror("Error!", "The Video doesn't Exist!")
-        
-def time_(time):
+                
+def time_(time, type="unformatted"):
     duration = [0, 0, time]
     duration[0]+=(duration[2]//3600)
     duration[1]=(duration[2]-duration[0]*3600)//60
     duration[2]=(duration[2]-duration[1]*60)%60
-    return f"{duration[0]}:{duration[1]}:{duration[2]}"
-                
+    if type == "unformatted":
+        return f"{duration[0]}:{duration[1]}:{duration[2]}"
+    elif type == "formatted":
+        return f"{duration[0]} Hours {duration[1]} Mins {duration[2]} Secs"
+    else:
+        return None
+
 def trim_menu(path):
     global trim_m
     trim_m = Toplevel()
-    trim_m.grab_set()
     trim_m.title("Trim Video")
+    trim_m.grab_set()
     trim_m.resizable(False, False)
     
     canvas = Canvas(trim_m, bg="white", height=300, width=300)
@@ -153,8 +181,6 @@ def trim_menu(path):
     time = StringVar()
     video_duration = Label(canvas, text=f"Duration: {time}", bg="white", fg="black", font=("", 8))
     canvas.create_window(150, 140, window=video_duration)
-
-    trim_m.protocol("WM_DELETE_WINDOW", trim_m.destroy)
     
     try:
         while True:
@@ -165,12 +191,21 @@ def trim_menu(path):
             end_scale.configure(from_=start_scale.get()+1)
             end_box.configure(from_=int(start_box.get())+1)
             trim_m.update()
+            
+    except ValueError: # Temp Fix
+        messagebox.showerror("Error!", "Value can't be left empty or be ZERO!")
+        trim_m.destroy()
+    
     except:
         trim_m.destroy()
 
-def video_section():
+def video_section(top=False):
     """ GUI for the Video Section """
-    root = Tk()
+    if top:
+        root = Toplevel()
+        root.grab_set()
+    else:
+        root = Tk()
     root.title("Clip Manager")
     root.resizable(False, False)
     
@@ -184,7 +219,7 @@ def video_section():
     address_bar = Entry(bg_canvas, font=('', 14), textvariable=address, state=DISABLED, bg="black")
     bg_canvas.create_window(240, 100, window=address_bar)
     
-    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=lambda: browsing(duration_label, address, [trim_video, clip_audio]), bg="black", fg="white")
+    browse = Button(bg_canvas, text="Choose Video", font=('', 10), command=lambda: browsing(duration_label, address, [trim_video]), bg="black", fg="white")
     bg_canvas.create_window(430, 100, window=browse)
 
     duration = "None"
@@ -193,11 +228,9 @@ def video_section():
     
     trim_video = Button(bg_canvas, text="Trim\n Video", bg="black", font=('', 10), fg="white", padx=20, command=lambda: trim_menu(address_bar.get()), state=DISABLED)
     bg_canvas.create_window(200, 200, window=trim_video)
-    
-    clip_audio = Button(bg_canvas, text="Audio\n Adder", bg="black", font=('', 10), fg="white", padx=20, state=DISABLED)
-    bg_canvas.create_window(400, 200, window=clip_audio)
 
-    root.eval('tk::PlaceWindow . center')
+    if not top:
+        root.eval('tk::PlaceWindow . center')
     root.mainloop()
     
 if __name__ == "__main__":

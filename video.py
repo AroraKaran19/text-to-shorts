@@ -11,47 +11,63 @@ def generate_audio(title, text):
     """ Generates Audio from text using TTS engine"""
     print(title, text)
     speech = gTTS(title+text)
-    speech.save(os.path.join("clips", f"{title}.mp3"))
+    speech.save(os.path.join("clips", f"{title.replace(' ','_')}.mp3"))
     print("Audio Generated!")
-    return os.path.join("clips", f"{title}.mp3")
+    return os.path.join("clips", f"{title.replace(' ','_')}.mp3")
+    
     
 """ Creates a video from audio and text"""
-def create_video(name, content, audio):
-    # text for video
-    text= name+content
-    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
+def create_video(audio, text=None):
+    # Set up the video file name and path
+    video_file = os.path.join(os.path.splitext(audio)[0] + ".mp4")
 
-    # Set the duration of the clip the same as the length of the text
-    # duration = txt_clip.duration
-    # txt_clip = txt_clip.set_duration(duration)
+    # Get audio duration
+    audio_duration = float(subprocess.check_output(['ffprobe', '-i', audio, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")]).strip())
 
+    # Create the video using FFmpeg with text overlay
+    if text:
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-f", "lavfi",
+            "-i", f"color=c=white:s=1920x1080:d={audio_duration + 1}",
+            "-vf", f"drawtext=fontfile=/path/to/font.ttf:fontsize=30:text='{text}':x=(w-text_w)/2:y=(h-text_h)/2",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-t", str(audio_duration + 1),
+            video_file
+        ])
+    # Create the video using FFmpeg without text overlay
+    else:
+        subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-f", "lavfi",
+            "-i", f"color=c=white:s=640x480:d={audio_duration + 1}",
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-t", str(audio_duration + 1),
+            video_file
+        ])
 
-    # # audio to accompany the video
-    # audio_clip = mpe.AudioFileClip(audio)
-
-    # # Set the duration of the audio the same as the length of the video
-
-    # audio_clip = audio_clip.set_duration(duration)
-    # Calculate the duration of the clip
-    duration = len(content) * 0.1
-
-    # Create text clip with the specified duration
-    txt_clip = mpe.TextClip(text, fontsize=70, color='white')
-    txt_clip = txt_clip.set_duration(duration)
-
-
-    # Load audio clip and set the duration
-    audio_clip = mpe.AudioFileClip(audio).set_duration(duration)
+    # Add audio to the video using FFmpeg
+    subprocess.call([
+        "ffmpeg",
+        "-y",
+        "-i", video_file,
+        "-i", audio,
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-shortest",
+        os.path.join(os.path.splitext(audio)[0] + "_video.mp4")
+    ])
     
-
-
-    # merge the audio and video
-    final_clip = mpe.CompositeVideoClip([txt_clip], size=(1920,1080)).set_audio(audio_clip)
-
-    # write the video to a file
-    final_clip.write_videofile(os.path.join("clips", f"{name}.mp4"), fps=24, codec='libx264', audio_codec='aac', temp_audiofile='temp-audio.m4a', remove_temp=True, write_logfile=False, verbose=False)
-
-    return os.path.join("clips", f"{name}.mp4")
+    os.remove(video_file)
+    # Check if video was created and return True or False
+    if os.path.exists(os.path.join(os.path.splitext(audio)[0] + "_video.mp4")):
+        return True
+    else:
+        return False
     
 def clip_duration(path):
     from moviepy.video.io.VideoFileClip import VideoFileClip

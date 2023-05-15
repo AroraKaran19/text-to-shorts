@@ -65,6 +65,7 @@ def create_video(audio, text=None):
     os.remove(video_file)
     # Check if video was created and return True or False
     if os.path.exists(os.path.join(os.path.splitext(audio)[0] + "_video.mp4")):
+        messagebox.showinfo("Video Created!", "Video has been successfully created!")
         return True
     else:
         return False

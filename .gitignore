@@ -1,6 +1,4 @@
 *.zip
 *.db
-*.pyc
-*.mp3
-expt/
-*.mp4
+__pycache__
+tempCodeRunnerFile.py

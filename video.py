@@ -31,12 +31,27 @@ def create_video(audio, text=None):
             "-y",
             "-f", "lavfi",
             "-i", f"color=c=white:s=1920x1080:d={audio_duration + 1}",
-            "-vf", f"drawtext=fontfile=/path/to/font.ttf:fontsize=30:text='{text}':x=(w-text_w)/2:y=(h-text_h)/2",
+            "-vf", f"drawtext=fontfile=/path/to/font.ttf:fontsize=30:text='{text.replace(':','').replace(',','.')}':x=(w-text_w)/2:y=(h-text_h)/2",
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
             "-t", str(audio_duration + 1),
             video_file
         ])
+
+    # subprocess.call([
+    #         "ffmpeg",
+    #         "-y",
+    #         "-f", "lavfi",
+    #         "-i", f"color=c=white:s=1920x1080:d={audio_duration + 1}",
+    #         "-vf", f"drawtext=fontfile=/path/to/font.ttf:fontsize=30:text='{text}':x=(w-text_w)/2:y=(h-text_h)/2",
+    #         "-c:v", "libx264",
+    #         "-c:a", "pcm_s16le",  # Audio codec set to WAV
+    #         "-f", "matroska" # Output container set to Matroska (MKV)
+    #         "-pix_fmt", "yuv420p",
+    #         "-t", str(audio_duration + 1),
+    #         video_file
+    #     ])
+    
     # Create the video using FFmpeg without text overlay
     else:
         subprocess.call([

@@ -189,7 +189,7 @@ def font_fix_linux(font_dir):
             if os.path.isfile(font_path) and (font_file.lower().endswith(".ttf") or font_file.lower().endswith(".otf")):
                 target_file = os.path.join(target_dir, font_file)
                 if not os.path.exists(target_file):
-                    shutil.move(font_path, target_dir)
+                    shutil.copy(font_path, target_dir)
 
             
 def logout(gui):

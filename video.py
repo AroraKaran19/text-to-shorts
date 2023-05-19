@@ -15,11 +15,20 @@ def generate_audio(title, text):
     print("Audio Generated!")
     return os.path.join("clips", f"{title.replace(' ','_')}.mp3")
     
+def play_video(video_path):
+    # play video using vlc player 
+    if os.name == 'posix':
+        os.system('export QT_QPA_PLATFORM=wayland')
+        os.system('unset XDG_SESSION_TYPE ; vlc ' + video_path)
+    else:
+        os.system('C:\\Program Files\\VideoLAN\\VLC\\vlc.exe ' + video_path)
+    print("hello")
+
     
 """ Creates a video from audio and text"""
-def create_video(audio, text=None):
+def create_video(audio, community, post_id, text=None):
     # Set up the video file name and path
-    video_file = os.path.join(os.path.splitext(audio)[0] + ".mp4")
+    video_file = community + "_" + str(post_id) + ".mp4"
 
     # Get audio duration
     audio_duration = float(subprocess.check_output(['ffprobe', '-i', audio, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")]).strip())
@@ -74,13 +83,16 @@ def create_video(audio, text=None):
         "-c:v", "copy",
         "-c:a", "aac",
         "-shortest",
-        os.path.join(os.path.splitext(audio)[0] + "_video.mp4")
+        community + "_" + str(post_id) + "_video.mp4"
     ])
     
+    os.remove(audio)
     os.remove(video_file)
     # Check if video was created and return True or False
-    if os.path.exists(os.path.join(os.path.splitext(audio)[0] + "_video.mp4")):
-        messagebox.showinfo("Video Created!", "Video has been successfully created!")
+    if os.path.exists(community + "_" + str(post_id) + "_video.mp4"):
+        result = messagebox.askquestion("Video Created!", "Video has been successfully created!\n\nDo you want to play the video?")
+        if result == 'yes':
+            play_video(community + "_" + str(post_id) + "_video.mp4")
         return True
     else:
         return False

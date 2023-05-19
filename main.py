@@ -13,12 +13,12 @@ def on_close(gui):
     if result:
         gui.destroy()
 
-def shorts_generator(post_title, post_content):
+def shorts_generator(post_title, community, post_id, post_content):
     """ Generates Video """
     audio=video.generate_audio(post_title.replace("?",""    ), post_content)
     content=post_title+post_content
     content= "\n".join([" ".join(content.split()[i:i+18]) for i in range(0, len(content.split()), 18)])
-    video.create_video(audio, content)
+    video.create_video(audio, community, post_id,  content)
     
 
 def fetch_post(community, post_id, gui):
@@ -48,7 +48,7 @@ def fetch_post(community, post_id, gui):
         print(f"\n(!) Post Link: https://reddit.com/r/{community}/comments/{post_id}")
         print("\n------------------------------------------------")
         gui.destroy()
-        shorts_generator(post_title, post_content)
+        shorts_generator(post_title, community, post_id, post_content)
         
     except prawcore.exceptions.Redirect or ValueError:
         showerror("Invalid Community", "Enter Appropriate Community Name or\nEntered community doesn't exists!")

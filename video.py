@@ -28,7 +28,7 @@ def play_video(video_path):
 """ Creates a video from audio and text"""
 def create_video(audio, community, post_id, text=None):
     # Set up the video file name and path
-    video_file = community + "_" + str(post_id) + ".mp4"
+    video_file = os.path.join("videos", f"{community}_{post_id}.mp4")
 
     # Get audio duration
     audio_duration = float(subprocess.check_output(['ffprobe', '-i', audio, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")]).strip())
@@ -83,16 +83,16 @@ def create_video(audio, community, post_id, text=None):
         "-c:v", "copy",
         "-c:a", "aac",
         "-shortest",
-        community + "_" + str(post_id) + "_video.mp4"
+        os.path.join("clips",  f"{community}_{str(post_id)}_video.mp4")
     ])
     
     os.remove(audio)
     os.remove(video_file)
     # Check if video was created and return True or False
-    if os.path.exists(community + "_" + str(post_id) + "_video.mp4"):
+    if os.path.exists(os.path.join("clips",  f"{community}_{str(post_id)}_video.mp4")):
         result = messagebox.askquestion("Video Created!", "Video has been successfully created!\n\nDo you want to play the video?")
         if result == 'yes':
-            play_video(community + "_" + str(post_id) + "_video.mp4")
+            play_video(os.path.join("clips",  f"{community}_{str(post_id)}_video.mp4"))
         return True
     else:
         return False

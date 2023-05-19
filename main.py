@@ -63,27 +63,27 @@ def reddit_gui():
         canvas = Canvas(reddit_root, height=550, width=700, bg=background)
         canvas.pack()
         
-        title = Label(canvas, text="Post Scrapper", bg=background, font=(title_font[os.name], 18, "bold"))
+        title = Label(canvas, text="Post Scrapper", bg=background, font=(title_font[os.name][1], 18, "bold"))
         canvas.create_window(350, 130, window=title)
         
         reddit_logo = PhotoImage(file=os.path.join("res", "reddit.png"))
         logo_label = Label(canvas, image=reddit_logo, bg=background)
         canvas.create_window(350, 60, window=logo_label)
         
-        community_label = Label(canvas, text="Community:", bg=background, font=(title_font[os.name], 12, "bold"))
+        community_label = Label(canvas, text="Community:", bg=background, font=(title_font[os.name][1], 12, "bold"))
         canvas.create_window(195, 330, window=community_label)
-        subreddit_community = Entry(canvas, width=25, font=(title_font[os.name], 14), bg="#159895")
+        subreddit_community = Entry(canvas, width=25, font=(title_font[os.name][1], 14), bg="#159895")
         canvas.create_window(400, 330, window=subreddit_community)
         
-        post_label = Label(canvas, text="Post ID:", bg=background, font=(title_font[os.name], 12, "bold"))
+        post_label = Label(canvas, text="Post ID:", bg=background, font=(title_font[os.name][1], 12, "bold"))
         canvas.create_window(210, 380, window=post_label)
-        post_id = Entry(canvas, width=25, font=(title_font[os.name], 14), bg="#159895")
+        post_id = Entry(canvas, width=25, font=(title_font[os.name][1], 14), bg="#159895")
         canvas.create_window(400, 380, window=post_id)
         
-        back_button = Button(canvas, text="Back", bg="red", font=(title_font[os.name], 12, "bold"), pady=5, command=lambda: (reddit_root.destroy(), main_gui()))
+        back_button = Button(canvas, text="Back", bg="red", font=(title_font[os.name][1], 12, "bold"), pady=5, command=lambda: (reddit_root.destroy(), main_gui()))
         canvas.create_window(50, 50, window=back_button)
         
-        create_button = Button(canvas, text="Create Video", bg="lime", font=(title_font[os.name], 12, "bold"), pady=8, command=lambda: fetch_post(subreddit_community.get(), post_id.get(), reddit_root))
+        create_button = Button(canvas, text="Create Video", bg="lime", font=(title_font[os.name][1], 12, "bold"), pady=8, command=lambda: fetch_post(subreddit_community.get(), post_id.get(), reddit_root))
         canvas.create_window(350, 450, window=create_button)
         
         reddit_root.eval('tk::PlaceWindow . center')
@@ -129,23 +129,23 @@ def reddit_login_gui():
     canvas = Canvas(login_gui, bg=background, height=300, width=300)
     canvas.pack()
     
-    login_label = Label(canvas, text="Login", bg=background, font=('Adobe Garamond Pro', 20, "bold"))
+    login_label = Label(canvas, text="Login", bg=background, font=(title_font[os.name][1], 20, "bold"))
     canvas.create_window(150, 30, window=login_label)
     
-    client_id_label = Label(canvas, text="Client ID:", bg=background, font=(title_font[os.name], 10, "bold"))
+    client_id_label = Label(canvas, text="Client ID:", bg=background, font=(title_font[os.name][1], 10, "bold"))
     canvas.create_window(70, 100, window=client_id_label)
-    client_id = Entry(canvas, width=25, font=(title_font[os.name], 10), bg="#159895")
+    client_id = Entry(canvas, width=25, font=(title_font[os.name][1], 10), bg="#159895")
     canvas.create_window(200, 100, window=client_id)
     
-    client_secret_label = Label(canvas, text="Client Secret:", bg=background, font=(title_font[os.name], 10, "bold"))
+    client_secret_label = Label(canvas, text="Client Secret:", bg=background, font=(title_font[os.name][1], 10, "bold"))
     canvas.create_window(60, 150, window=client_secret_label)
-    client_secret = Entry(canvas, width=25, font=(title_font[os.name], 10), bg="#159895")
+    client_secret = Entry(canvas, width=25, font=(title_font[os.name][1], 10), bg="#159895")
     canvas.create_window(200, 150, window=client_secret)
     
-    exit_button = Button(canvas, text="Exit", bg="red", font=('Adobe Garamond Pro', 10), pady=5, padx=6, command=lambda: (login_gui.destroy(), main_gui()))
+    exit_button = Button(canvas, text="Exit", bg="red", font=(title_font[os.name][1], 10), pady=5, padx=6, command=lambda: (login_gui.destroy(), main_gui()))
     canvas.create_window(30, 30, window=exit_button)
 
-    save_button = Button(canvas, text="Save", bg="lime", font=('Adobe Garamond Pro', 10), pady=8, padx=10, command=lambda: (save_reddit_info(client_id.get(), client_secret.get())))
+    save_button = Button(canvas, text="Save", bg="lime", font=(title_font[os.name][1], 10), pady=8, padx=10, command=lambda: (save_reddit_info(client_id.get(), client_secret.get())))
     canvas.create_window(150, 220, window=save_button)
     
     login_gui.eval('tk::PlaceWindow . center')
@@ -216,10 +216,10 @@ def main_gui():
     logo_label = Label(canvas, image=logo, bg="#159895")
     canvas.create_window(50, 50, window=logo_label)    
     
-    title = Label(canvas, text="Text To Shorts\nEngine", bg=background, font=(title_font[os.name], 32, ""), fg="black")
+    title = Label(canvas, text="Text To Shorts\nEngine", bg=background, font=(title_font[os.name][0], 32, ""), fg="black")
     canvas.create_window(500, 200, window=title)
     
-    opt = Label(canvas, text="Choose Your Platform", bg=background, font=(title_font[os.name], 15, "bold underline"), fg="black")
+    opt = Label(canvas, text="Choose Your Platform", bg=background, font=(title_font[os.name][1], 15, "bold underline"), fg="black")
     canvas.create_window(500, 280, window=opt)
     
     # open ai button
@@ -233,14 +233,14 @@ def main_gui():
     canvas.create_window(640, 380, window=reddit_button)
 
     # clip manager button
-    clip_manager_button = Button(canvas, text="Video Trimmer", fg="black", font=(title_font[os.name], 15), height=2, width=20, bg="#10A37F", command=lambda: video.video_section(True))
+    clip_manager_button = Button(canvas, text="Video Trimmer", fg="black", font=(title_font[os.name][1], 15), height=2, width=20, bg="#10A37F", command=lambda: video.video_section(True))
     canvas.create_window(700, 50, window=clip_manager_button)
     
     if os.path.isfile("reddit_info.db"):
-        logout_button = Button(canvas, text="Logout", fg="black", font=(title_font[os.name], 15), height=2, width=10, bg="#10A37F", command=lambda: logout(root))
+        logout_button = Button(canvas, text="Logout", fg="black", font=(title_font[os.name][1], 15), height=2, width=10, bg="#10A37F", command=lambda: logout(root))
         canvas.create_window(900, 50, window=logout_button)
     else:
-        login_button = Button(canvas, text="Login", fg="black", font=(title_font[os.name], 15), height=2, width=10, bg="#10A37F", command=lambda: reddit_login())
+        login_button = Button(canvas, text="Login", fg="black", font=(title_font[os.name][1], 15), height=2, width=10, bg="#10A37F", command=lambda: reddit_login())
         canvas.create_window(900, 50, window=login_button)
     
     root.eval('tk::PlaceWindow . center')
@@ -252,7 +252,7 @@ if __name__ == "__main__":
             # fix font issues in linux
             font_fix_linux("res/fonts")
     # make video directory if not present
-    title_font={"nt":"Terminal", "posix":"Monolisa"}
+    title_font={"nt":["Terminal","Adobe Garamond Pro"], "posix":["Monolisa","JetBrains Mono"]}
     if not os.path.exists("clips"):
         os.mkdir("clips")
     try:

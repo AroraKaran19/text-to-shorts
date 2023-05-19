@@ -2,6 +2,7 @@ import os
 import subprocess
 import sqlite3
 from random import choice
+import shutil
 
 background = "white"
 db_name = "reddit_info.db"
@@ -173,6 +174,23 @@ def reddit_login():
         if opt:
             root.destroy()
             reddit_login_gui()
+
+def font_fix_linux(font_dir):
+    # if font_dir is not empty
+    if os.listdir(font_dir):
+        home_dir = os.path.expanduser("~")
+        target_dir = os.path.join(home_dir, ".fonts")
+
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+            
+        for font_file in os.listdir(font_dir):
+            font_path = os.path.join(font_dir, font_file)
+            if os.path.isfile(font_path) and (font_file.lower().endswith(".ttf") or font_file.lower().endswith(".otf")):
+                target_file = os.path.join(target_dir, font_file)
+                if not os.path.exists(target_file):
+                    shutil.move(font_path, target_dir)
+
             
 def logout(gui):
     gui.destroy()
@@ -230,6 +248,9 @@ def main_gui():
     root.mainloop()
     
 if __name__ == "__main__":
+    if os.name != "nt" and os.name != "darwin":
+            # fix font issues in linux
+            font_fix_linux("res/fonts")
     # make video directory if not present
     if not os.path.exists("clips"):
         os.mkdir("clips")
@@ -273,6 +294,7 @@ if __name__ == "__main__":
                 showinfo("Install Library", "(!) Successfully Installed (!)")
                 import praw, prawcore
                 import video
+
                 main_gui()
             else:
                 showerror("Error!!", "Error Occured!\nWhile Installing from Requirements.txt\nReport on issues section\nhttps://github.com/AroraKaran19/gpt-to-shorts/issues")
